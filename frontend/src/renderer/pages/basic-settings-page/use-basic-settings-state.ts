@@ -29,9 +29,7 @@ type SettingsUpdateRequest = Record<string, unknown>;
 type UseBasicSettingsStateResult = {
   snapshot: BasicSettingsSnapshot;
   pending_state: SettingPendingState;
-  is_refreshing: boolean;
   is_task_busy: boolean;
-  refresh_snapshot: () => Promise<void>;
   update_source_language: (next_language: string) => Promise<void>;
   update_target_language: (next_language: string) => Promise<void>;
   update_project_save_mode: (next_mode: ProjectSaveMode) => Promise<void>;
@@ -74,7 +72,6 @@ export function useBasicSettingsState(): UseBasicSettingsStateResult {
   const [pending_state, set_pending_state] = useState<SettingPendingState>(() => {
     return create_pending_state();
   });
-  const [is_refreshing, set_is_refreshing] = useState<boolean>(false);
   const snapshot_ref = useRef<BasicSettingsSnapshot>(snapshot);
   const settings_snapshot_ref = useRef<SettingsSnapshot>(settings_snapshot);
   const project_prefilter_client_ref = useRef(createProjectPrefilterClient());
@@ -109,8 +106,6 @@ export function useBasicSettingsState(): UseBasicSettingsStateResult {
   );
 
   const refresh_snapshot = useCallback(async (): Promise<void> => {
-    set_is_refreshing(true);
-
     try {
       const next_settings_snapshot = await refresh_settings();
       set_snapshot(build_basic_settings_snapshot(next_settings_snapshot));
@@ -119,8 +114,6 @@ export function useBasicSettingsState(): UseBasicSettingsStateResult {
         "error",
         error instanceof Error ? error.message : t("basic_settings_page.feedback.refresh_failed"),
       );
-    } finally {
-      set_is_refreshing(false);
     }
   }, [push_toast, refresh_settings, t]);
 
@@ -458,9 +451,7 @@ export function useBasicSettingsState(): UseBasicSettingsStateResult {
     return {
       snapshot,
       pending_state,
-      is_refreshing,
       is_task_busy,
-      refresh_snapshot,
       update_source_language,
       update_target_language,
       update_project_save_mode,
@@ -468,10 +459,8 @@ export function useBasicSettingsState(): UseBasicSettingsStateResult {
       update_request_timeout,
     };
   }, [
-    is_refreshing,
     is_task_busy,
     pending_state,
-    refresh_snapshot,
     snapshot,
     update_output_folder_open_on_finish,
     update_project_save_mode,

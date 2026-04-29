@@ -31,7 +31,7 @@ type ModelPageProps = {
   is_sidebar_collapsed: boolean;
 };
 
-export function ModelPage(props: ModelPageProps): JSX.Element {
+export function ModelPage(_props: ModelPageProps): JSX.Element {
   const { t } = useI18n();
   const { push_toast } = useDesktopToast();
   const model_page_state = useModelPageState();
@@ -108,10 +108,7 @@ export function ModelPage(props: ModelPageProps): JSX.Element {
         onClose={model_page_state.close_selector_dialog}
       />
 
-      <div
-        className="model-page page-shell page-shell--full"
-        data-sidebar-collapsed={String(props.is_sidebar_collapsed)}
-      >
+      <div className="model-page page-shell page-shell--full">
         <section className="model-page__list" aria-label={t("model_page.title")}>
           {model_page_state.grouped_categories.map((category) => (
             <ModelCategoryCard

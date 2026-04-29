@@ -44,7 +44,7 @@ function parse_number_draft(
   return parsed_value;
 }
 
-export function ExpertSettingsPage(props: ExpertSettingsPageProps): JSX.Element {
+export function ExpertSettingsPage(_props: ExpertSettingsPageProps): JSX.Element {
   const { t } = useI18n();
   const { push_toast } = useDesktopToast();
   const expert_settings_state = useExpertSettingsState();
@@ -157,10 +157,7 @@ export function ExpertSettingsPage(props: ExpertSettingsPageProps): JSX.Element 
   }
 
   return (
-    <div
-      className="expert-settings-page page-shell page-shell--full"
-      data-sidebar-collapsed={String(props.is_sidebar_collapsed)}
-    >
+    <div className="expert-settings-page page-shell page-shell--full">
       <section className="expert-settings-page__list" aria-label={t("expert_settings_page.title")}>
         <SettingCardRow
           title={t("expert_settings_page.fields.response_check_settings.title")}
@@ -175,7 +172,6 @@ export function ExpertSettingsPage(props: ExpertSettingsPageProps): JSX.Element 
               <AppDropdownMenuTrigger asChild>
                 <AppButton
                   variant="outline"
-                  className="expert-settings-page__menu-button"
                   onClick={(event) => {
                     void handle_response_check_menu_button_click(event);
                   }}

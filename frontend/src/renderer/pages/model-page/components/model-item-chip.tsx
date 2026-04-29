@@ -3,7 +3,6 @@ import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, GripVertical } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 
-import { cn } from "@/lib/utils";
 import type { ModelEntrySnapshot } from "@/pages/model-page/types";
 import { AppButton } from "@/widgets/app-button/app-button";
 import {
@@ -59,10 +58,7 @@ export function ModelItemChip(props: ModelItemChipProps): JSX.Element {
           <AppButton
             type="button"
             variant={props.active ? "default" : "outline"}
-            className={cn(
-              "model-page__name-trigger",
-              props.active ? "model-page__name-trigger--active" : undefined,
-            )}
+            className="model-page__name-trigger"
           >
             <span className="model-page__name-text">{props.model.name}</span>
             <ChevronDown data-icon="inline-end" />

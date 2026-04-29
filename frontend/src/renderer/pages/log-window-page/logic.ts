@@ -1,9 +1,9 @@
 import type { LogEvent, LogLevel } from "@/app/desktop-api";
 
 export type LogLevelFilter = "all" | LogLevel;
-export const LOG_WINDOW_EVENT_LIMIT = 1000;
+const LOG_WINDOW_EVENT_LIMIT = 1000;
 
-export function normalize_log_event_message(event: LogEvent): LogEvent {
+function normalize_log_event_message(event: LogEvent): LogEvent {
   return {
     ...event,
     message: event.message.trim(),
@@ -46,11 +46,6 @@ export function sort_log_events_latest_first(events: LogEvent[]): LogEvent[] {
   return [...events].sort((left_event, right_event) => {
     return right_event.sequence - left_event.sequence;
   });
-}
-
-export function get_log_message_first_line(message: string): string {
-  const first_line = message.replace(/\r\n/gu, "\n").replace(/\r/gu, "\n").split("\n")[0] ?? "";
-  return first_line.trim() === "" ? "(blank)" : first_line;
 }
 
 export function compress_log_message_text(message: string): string {

@@ -54,7 +54,7 @@ function parse_number_draft(
   return parsed_value;
 }
 
-export function BasicSettingsPage(props: BasicSettingsPageProps): JSX.Element {
+export function BasicSettingsPage(_props: BasicSettingsPageProps): JSX.Element {
   const { t } = useI18n();
   const { push_toast } = useDesktopToast();
   const basic_settings_state = useBasicSettingsState();
@@ -160,10 +160,7 @@ export function BasicSettingsPage(props: BasicSettingsPageProps): JSX.Element {
   }
 
   return (
-    <div
-      className="basic-settings-page page-shell page-shell--full"
-      data-sidebar-collapsed={String(props.is_sidebar_collapsed)}
-    >
+    <div className="basic-settings-page page-shell page-shell--full">
       <section className="basic-settings-page__list" aria-label={t("basic_settings_page.title")}>
         <SettingCardRow
           title={t("basic_settings_page.fields.source_language.title")}
@@ -176,7 +173,7 @@ export function BasicSettingsPage(props: BasicSettingsPageProps): JSX.Element {
                 void basic_settings_state.update_source_language(next_value);
               }}
             >
-              <SelectTrigger className="basic-settings-page__select">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -203,7 +200,7 @@ export function BasicSettingsPage(props: BasicSettingsPageProps): JSX.Element {
                 void basic_settings_state.update_target_language(next_value);
               }}
             >
-              <SelectTrigger className="basic-settings-page__select">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -232,7 +229,7 @@ export function BasicSettingsPage(props: BasicSettingsPageProps): JSX.Element {
                 }
               }}
             >
-              <SelectTrigger className="basic-settings-page__select">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

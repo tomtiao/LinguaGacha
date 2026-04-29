@@ -18,13 +18,11 @@ import type {
 
 type TsConversionConfirmState = {
   open: boolean;
-  submitting: boolean;
 };
 
 function create_empty_confirm_state(): TsConversionConfirmState {
   return {
     open: false,
-    submitting: false,
   };
 }
 
@@ -71,14 +69,11 @@ export function useTsConversionPageState() {
 
     set_confirm_state({
       open: true,
-      submitting: false,
     });
   }, [project_snapshot.loaded, push_toast, runtime_items.length, t]);
 
   const close_confirm_dialog = useCallback((): void => {
-    set_confirm_state((previous_state) => {
-      return previous_state.submitting ? previous_state : create_empty_confirm_state();
-    });
+    set_confirm_state(create_empty_confirm_state());
   }, []);
 
   const confirm_conversion = useCallback(async (): Promise<void> => {
@@ -90,7 +85,6 @@ export function useTsConversionPageState() {
     set_is_running(true);
     set_confirm_state({
       open: false,
-      submitting: false,
     });
     const progress_toast_id = push_progress_toast({
       message: t("ts_conversion_page.action.preparing"),

@@ -109,9 +109,6 @@ export type ProofreadingListWindow = {
 export type ProofreadingRuntimeSyncState = {
   revision: number;
   project_id: string;
-  total_item_count: number;
-  review_item_count: number;
-  warning_item_count: number;
   default_filters: ProofreadingFilterOptions;
 };
 
@@ -130,8 +127,6 @@ type ProofreadingRuntimeState = {
   warning_count_by_code: Map<string, number>;
   file_count_by_path: Map<string, number>;
   glossary_term_count_map: Map<string, ProofreadingFilterPanelTermEntry>;
-  review_item_count: number;
-  warning_item_count: number;
   default_filters: ProofreadingFilterOptions;
 };
 
@@ -1105,11 +1100,6 @@ function apply_counter_delta(args: {
   item: ProofreadingClientItem;
   delta: number;
 }): void {
-  args.state.review_item_count += args.delta;
-  if (args.item.warnings.length > 0) {
-    args.state.warning_item_count += args.delta;
-  }
-
   increment_map_count(args.state.status_count_by_code, args.item.status, args.delta);
   increment_map_count(args.state.file_count_by_path, args.item.file_path, args.delta);
 
@@ -1181,9 +1171,6 @@ function build_runtime_sync_state(state: ProofreadingRuntimeState): Proofreading
   return {
     revision: state.revision,
     project_id: state.project_id,
-    total_item_count: state.total_item_count,
-    review_item_count: state.review_item_count,
-    warning_item_count: state.warning_item_count,
     default_filters: clone_proofreading_filter_options(state.default_filters),
   };
 }
@@ -1256,8 +1243,6 @@ function create_runtime_state(input: ProofreadingRuntimeHydrationInput): Proofre
     warning_count_by_code,
     file_count_by_path,
     glossary_term_count_map,
-    review_item_count: 0,
-    warning_item_count: 0,
     default_filters: normalize_proofreading_filter_options(undefined, []),
   };
 
@@ -1436,15 +1421,6 @@ export function createProofreadingRuntimeEngine() {
         view_id,
         row_count: ordered_item_ids.length,
         window_start: window_bounds.start,
-        summary: {
-          total_items: state.total_item_count,
-          filtered_items: sorted_items.length,
-          warning_items: sorted_items.reduce((count, item) => {
-            return count + (item.warnings.length > 0 ? 1 : 0);
-          }, 0),
-        },
-        default_filters: clone_proofreading_filter_options(state.default_filters),
-        filters: clone_proofreading_filter_options(filters),
         window_rows: build_window_rows({
           state,
           ordered_item_ids,
@@ -1553,7 +1529,6 @@ export function createProofreadingRuntimeEngine() {
       const file_count_by_path = build_file_count_by_path(file_scope_items);
 
       return {
-        filters: clone_proofreading_filter_options(filters),
         available_statuses: build_status_values({
           items: items_in_natural_order,
           filters,

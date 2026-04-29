@@ -30,20 +30,16 @@ type ModelListPayload = {
   models?: string[];
 };
 
-type ModelTestPayload = Partial<ModelTestResult> & {
-  key_results?: Array<Partial<ModelTestResult["key_results"][number]>>;
-};
+type ModelTestPayload = Partial<ModelTestResult>;
 
 type UseModelPageStateResult = {
   snapshot: ModelPageSnapshot;
   grouped_categories: ModelCategorySnapshot[];
-  is_refreshing: boolean;
   readonly: boolean;
   dialog_state: ModelDialogState;
   confirm_state: ModelConfirmState;
   selector_state: ModelSelectorState;
   active_dialog_model: ModelEntrySnapshot | null;
-  refresh_snapshot: () => Promise<void>;
   request_add_model: (model_type: ModelType) => Promise<void>;
   request_activate_model: (model_id: string) => Promise<void>;
   request_delete_model: (model_id: string) => void;
@@ -310,27 +306,9 @@ function normalize_model_page_snapshot(payload: ModelPageSnapshotPayload): Model
 }
 
 function normalize_model_test_result(payload: ModelTestPayload): ModelTestResult {
-  const key_results = Array.isArray(payload.key_results)
-    ? payload.key_results.map((key_result) => {
-        return {
-          masked_key: String(key_result.masked_key ?? ""),
-          success: Boolean(key_result.success),
-          input_tokens: read_number(key_result.input_tokens, 0),
-          output_tokens: read_number(key_result.output_tokens, 0),
-          response_time_ms: read_number(key_result.response_time_ms, 0),
-          error_reason: String(key_result.error_reason ?? ""),
-        };
-      })
-    : [];
-
   return {
     success: Boolean(payload.success),
     result_msg: String(payload.result_msg ?? ""),
-    total_count: read_number(payload.total_count, 0),
-    success_count: read_number(payload.success_count, 0),
-    failure_count: read_number(payload.failure_count, 0),
-    total_response_time_ms: read_number(payload.total_response_time_ms, 0),
-    key_results,
   };
 }
 
@@ -457,7 +435,6 @@ export function useModelPageState(): UseModelPageStateResult {
   const { push_toast } = useDesktopToast();
   const { task_snapshot } = useDesktopRuntime();
   const [snapshot, set_snapshot] = useState<ModelPageSnapshot>(EMPTY_SNAPSHOT);
-  const [is_refreshing, set_is_refreshing] = useState(false);
   const [is_action_running, set_is_action_running] = useState(false);
   const [dialog_state, set_dialog_state] = useState<ModelDialogState>(close_dialog_state());
   const [confirm_state, set_confirm_state] = useState<ModelConfirmState>(close_confirm_state());
@@ -472,8 +449,6 @@ export function useModelPageState(): UseModelPageStateResult {
   }, [snapshot]);
 
   const refresh_snapshot = useCallback(async (): Promise<void> => {
-    set_is_refreshing(true);
-
     try {
       const payload = await api_fetch<ModelPageSnapshotPayload>("/api/models/snapshot", {});
       const next_snapshot = normalize_model_page_snapshot(payload);
@@ -483,8 +458,6 @@ export function useModelPageState(): UseModelPageStateResult {
         "error",
         error instanceof Error ? error.message : t("model_page.feedback.refresh_failed"),
       );
-    } finally {
-      set_is_refreshing(false);
     }
   }, [push_toast, t]);
 
@@ -859,13 +832,11 @@ export function useModelPageState(): UseModelPageStateResult {
   return {
     snapshot,
     grouped_categories,
-    is_refreshing,
     readonly,
     dialog_state,
     confirm_state,
     selector_state,
     active_dialog_model,
-    refresh_snapshot,
     request_add_model,
     request_activate_model,
     request_delete_model,

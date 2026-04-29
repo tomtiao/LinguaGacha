@@ -86,7 +86,6 @@ function create_expert_settings_state_fixture() {
       write_translated_name_fields_to_file: false,
       auto_process_prefix_suffix_preserved_text: false,
     },
-    is_refreshing: false,
     is_task_busy: false,
     refresh_snapshot: vi.fn(async () => {}),
     update_preceding_lines_threshold: vi.fn(async (_next_value: number) => {}),

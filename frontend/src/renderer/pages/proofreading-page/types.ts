@@ -57,12 +57,6 @@ export type ProofreadingWarningFragmentsByCode = {
   TEXT_PRESERVE?: string[];
 };
 
-export type ProofreadingSummary = {
-  total_items: number;
-  filtered_items: number;
-  warning_items: number;
-};
-
 export type ProofreadingFilterOptions = {
   warning_types: string[];
   statuses: string[];
@@ -90,22 +84,6 @@ export type ProofreadingClientItem = ProofreadingItem & {
   compressed_dst: string;
 };
 
-export type ProofreadingSnapshot = {
-  revision: number;
-  project_id: string;
-  readonly: boolean;
-  summary: ProofreadingSummary;
-  filters: ProofreadingFilterOptions;
-  items: ProofreadingClientItem[];
-};
-
-type ProofreadingMutationResult = {
-  revision: number;
-  changed_item_ids: Array<number | string>;
-  items: ProofreadingClientItem[];
-  summary: ProofreadingSummary;
-};
-
 export type ProofreadingVisibleItem = {
   row_id: string;
   item: ProofreadingClientItem;
@@ -119,9 +97,6 @@ export type ProofreadingListView = {
   view_id: string;
   row_count: number;
   window_start: number;
-  summary: ProofreadingSummary;
-  default_filters: ProofreadingFilterOptions;
-  filters: ProofreadingFilterOptions;
   window_rows: ProofreadingVisibleItem[];
   invalid_regex_message: string | null;
 };
@@ -132,7 +107,6 @@ export type ProofreadingFilterPanelTermEntry = {
 };
 
 export type ProofreadingFilterPanelState = {
-  filters: ProofreadingFilterOptions;
   available_statuses: string[];
   status_count_by_code: Record<string, number>;
   available_warning_types: string[];
@@ -144,22 +118,6 @@ export type ProofreadingFilterPanelState = {
   without_glossary_miss_count: number;
 };
 
-type ProofreadingPayloadGlossaryTerm = ProofreadingGlossaryTerm | { src?: string; dst?: string };
-
-type ProofreadingPayloadItem = Partial<ProofreadingItem> & {
-  applied_glossary_terms?: ProofreadingPayloadGlossaryTerm[];
-  failed_glossary_terms?: ProofreadingPayloadGlossaryTerm[];
-};
-
-export type ProofreadingMutationPayload = {
-  result?: {
-    revision?: number;
-    changed_item_ids?: Array<number | string>;
-    summary?: Partial<ProofreadingSummary>;
-    items?: ProofreadingPayloadItem[];
-  };
-};
-
 export type ProofreadingDialogState = {
   open: boolean;
   target_row_id: string | null;
@@ -167,7 +125,7 @@ export type ProofreadingDialogState = {
   saving: boolean;
 };
 
-type ProofreadingPendingMutationKind = "replace-all" | "retranslate-items" | "reset-items";
+type ProofreadingPendingMutationKind = "retranslate-items" | "reset-items";
 
 export type ProofreadingSearchScope = "all" | "src" | "dst";
 
@@ -209,17 +167,7 @@ export function clone_proofreading_filter_options(
   };
 }
 
-export function create_empty_proofreading_summary(): ProofreadingSummary {
-  return {
-    total_items: 0,
-    filtered_items: 0,
-    warning_items: 0,
-  };
-}
-
-export function resolve_proofreading_filter_source_items(
-  items: ProofreadingItem[],
-): ProofreadingItem[] {
+function resolve_proofreading_filter_source_items(items: ProofreadingItem[]): ProofreadingItem[] {
   return [...items];
 }
 
@@ -250,16 +198,6 @@ export function resolve_default_proofreading_warning_types(
     });
 
   return [...known_warning_types, ...extra_warning_types];
-}
-
-function normalize_proofreading_summary(
-  summary: Partial<ProofreadingSummary> | undefined,
-): ProofreadingSummary {
-  return {
-    total_items: Number(summary?.total_items ?? 0),
-    filtered_items: Number(summary?.filtered_items ?? 0),
-    warning_items: Number(summary?.warning_items ?? 0),
-  };
 }
 
 function normalize_glossary_terms(
@@ -360,78 +298,6 @@ export function normalize_proofreading_filter_options(
   };
 }
 
-function normalize_proofreading_item(
-  item: Partial<ProofreadingItem> & {
-    applied_glossary_terms?: Array<ProofreadingGlossaryTerm | { src?: string; dst?: string }>;
-    failed_glossary_terms?: Array<ProofreadingGlossaryTerm | { src?: string; dst?: string }>;
-  },
-): ProofreadingClientItem {
-  const normalized_item: ProofreadingItem = {
-    item_id: item.item_id ?? 0,
-    file_path: String(item.file_path ?? ""),
-    row_number: Number(item.row_number ?? 0),
-    src: String(item.src ?? ""),
-    dst: String(item.dst ?? ""),
-    status: String(item.status ?? ""),
-    warnings: Array.isArray(item.warnings)
-      ? unique_strings(item.warnings.map((warning) => String(warning)))
-      : [],
-    warning_fragments_by_code: {},
-    applied_glossary_terms: normalize_glossary_terms(item.applied_glossary_terms),
-    failed_glossary_terms: normalize_glossary_terms(item.failed_glossary_terms),
-  };
-
-  return {
-    ...normalized_item,
-    row_id: build_proofreading_row_id(normalized_item.item_id),
-    compressed_src: compress_proofreading_text(normalized_item.src),
-    compressed_dst: compress_proofreading_text(normalized_item.dst),
-  };
-}
-
-function normalize_proofreading_items(
-  items:
-    | Array<
-        Partial<ProofreadingItem> & {
-          applied_glossary_terms?: Array<ProofreadingGlossaryTerm | { src?: string; dst?: string }>;
-          failed_glossary_terms?: Array<ProofreadingGlossaryTerm | { src?: string; dst?: string }>;
-        }
-      >
-    | undefined,
-): ProofreadingClientItem[] {
-  return Array.isArray(items) ? items.map((item) => normalize_proofreading_item(item)) : [];
-}
-
-export function normalize_proofreading_mutation_payload(
-  payload: ProofreadingMutationPayload,
-): ProofreadingMutationResult {
-  const result = payload.result ?? {};
-  const items = normalize_proofreading_items(result.items);
-  return {
-    revision: Number(result.revision ?? 0),
-    changed_item_ids: Array.isArray(result.changed_item_ids) ? result.changed_item_ids : [],
-    items,
-    summary: normalize_proofreading_summary(result.summary),
-  };
-}
-
-export function create_empty_proofreading_snapshot(): ProofreadingSnapshot {
-  return {
-    revision: 0,
-    project_id: "",
-    readonly: false,
-    summary: create_empty_proofreading_summary(),
-    filters: {
-      warning_types: [],
-      statuses: [],
-      file_paths: [],
-      glossary_terms: [],
-      include_without_glossary_miss: true,
-    },
-    items: [],
-  };
-}
-
 export function create_empty_proofreading_list_view(): ProofreadingListView {
   return {
     revision: 0,
@@ -439,21 +305,6 @@ export function create_empty_proofreading_list_view(): ProofreadingListView {
     view_id: "",
     row_count: 0,
     window_start: 0,
-    summary: create_empty_proofreading_summary(),
-    default_filters: {
-      warning_types: [],
-      statuses: [],
-      file_paths: [],
-      glossary_terms: [],
-      include_without_glossary_miss: true,
-    },
-    filters: {
-      warning_types: [],
-      statuses: [],
-      file_paths: [],
-      glossary_terms: [],
-      include_without_glossary_miss: true,
-    },
     window_rows: [],
     invalid_regex_message: null,
   };
@@ -461,13 +312,6 @@ export function create_empty_proofreading_list_view(): ProofreadingListView {
 
 export function create_empty_proofreading_filter_panel_state(): ProofreadingFilterPanelState {
   return {
-    filters: {
-      warning_types: [],
-      statuses: [],
-      file_paths: [],
-      glossary_terms: [],
-      include_without_glossary_miss: true,
-    },
     available_statuses: [],
     status_count_by_code: {},
     available_warning_types: [],

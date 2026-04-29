@@ -208,9 +208,6 @@ function create_sync_state() {
   return {
     revision: 1,
     project_id: "E:/demo/sample.lg",
-    total_item_count: 1,
-    review_item_count: 1,
-    warning_item_count: 0,
     default_filters: {
       warning_types: ["NO_WARNING"],
       statuses: ["NONE"],
@@ -229,13 +226,6 @@ function create_list_view() {
     view_id: "view-1",
     row_count: 1,
     window_start: 0,
-    default_filters: create_sync_state().default_filters,
-    filters: create_sync_state().default_filters,
-    summary: {
-      total_items: 1,
-      filtered_items: 1,
-      warning_items: 0,
-    },
     window_rows: [
       {
         row_id: "1",
@@ -263,7 +253,6 @@ function create_list_view() {
 function create_filter_panel() {
   return {
     ...create_empty_proofreading_filter_panel_state(),
-    filters: create_sync_state().default_filters,
     available_statuses: ["NONE"],
     status_count_by_code: {
       NONE: 1,

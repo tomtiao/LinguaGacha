@@ -17,7 +17,7 @@ const NAME_FIELD_SCOPE_LABEL_KEY_BY_SCOPE = {
 
 const NAME_FIELD_FILTER_SCOPES: NameFieldFilterScope[] = ["all", "src", "dst"];
 
-export function NameFieldExtractionPage(props: ScreenComponentProps): JSX.Element {
+export function NameFieldExtractionPage(_props: ScreenComponentProps): JSX.Element {
   const { t } = useI18n();
   const page_state = useNameFieldExtractionPageState();
   const scope_button_label =
@@ -44,10 +44,7 @@ export function NameFieldExtractionPage(props: ScreenComponentProps): JSX.Elemen
   );
 
   return (
-    <div
-      className="name-field-extraction-page page-shell page-shell--full"
-      data-sidebar-collapsed={String(props.is_sidebar_collapsed)}
-    >
+    <div className="name-field-extraction-page page-shell page-shell--full">
       <SearchBar
         variant="filter"
         keyword={page_state.filter_state.keyword}

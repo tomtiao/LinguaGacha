@@ -28,7 +28,7 @@ type WorkbenchPlannerItemRecord = {
   retry_count: number;
 };
 
-export type WorkbenchTranslationInheritanceMode = "none" | "inherit";
+type WorkbenchTranslationInheritanceMode = "none" | "inherit";
 
 type WorkbenchDerivedMeta = {
   translation_extras: Record<string, unknown>;
@@ -661,20 +661,6 @@ function create_file_mutation_runtime_plan(args: {
       ]),
     },
   };
-}
-
-export function create_workbench_add_file_plan(args: {
-  state: ProjectStoreState;
-  parsed_file: WorkbenchFileParsePreview;
-  settings: WorkbenchPlannerSettings;
-  inheritance_mode?: WorkbenchTranslationInheritanceMode;
-}): WorkbenchProjectMutationPlan {
-  return create_workbench_add_files_plan({
-    state: args.state,
-    parsed_files: [args.parsed_file],
-    settings: args.settings,
-    inheritance_mode: args.inheritance_mode,
-  });
 }
 
 export function create_workbench_add_files_plan(args: {

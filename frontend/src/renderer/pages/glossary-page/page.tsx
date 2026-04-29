@@ -20,7 +20,7 @@ const GLOSSARY_SCOPE_LABEL_KEY_BY_SCOPE = {
 } satisfies Record<GlossaryFilterScope, LocaleKey>;
 
 const GLOSSARY_FILTER_SCOPES: GlossaryFilterScope[] = ["all", "src", "dst", "info"];
-export function GlossaryPage(props: ScreenComponentProps): JSX.Element {
+export function GlossaryPage(_props: ScreenComponentProps): JSX.Element {
   const { t } = useI18n();
   const { push_toast } = useDesktopToast();
   const glossary_page_state = useGlossaryPageState();
@@ -49,10 +49,7 @@ export function GlossaryPage(props: ScreenComponentProps): JSX.Element {
     });
 
   return (
-    <div
-      className="glossary-page page-shell page-shell--full"
-      data-sidebar-collapsed={String(props.is_sidebar_collapsed)}
-    >
+    <div className="glossary-page page-shell page-shell--full">
       <SearchBar
         variant="filter"
         keyword={glossary_page_state.filter_state.keyword}

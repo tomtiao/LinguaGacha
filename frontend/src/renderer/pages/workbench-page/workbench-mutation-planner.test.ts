@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import type { ProjectStoreState } from "@/app/project/store/project-store";
 import {
   create_workbench_add_files_plan,
-  create_workbench_add_file_plan,
   type WorkbenchFileParsePreview,
 } from "@/pages/workbench-page/workbench-mutation-planner";
 
@@ -79,7 +78,20 @@ function create_parsed_file(
   };
 }
 
-function get_payload_items(plan: ReturnType<typeof create_workbench_add_file_plan>) {
+function create_single_file_add_plan(args: {
+  state: ProjectStoreState;
+  parsed_file: WorkbenchFileParsePreview;
+  inheritance_mode: "none" | "inherit";
+}) {
+  return create_workbench_add_files_plan({
+    state: args.state,
+    parsed_files: [args.parsed_file],
+    settings: SETTINGS,
+    inheritance_mode: args.inheritance_mode,
+  });
+}
+
+function get_payload_items(plan: ReturnType<typeof create_workbench_add_files_plan>) {
   const files = plan.requestBody.files as Array<Record<string, unknown>>;
   return files[0]?.parsed_items as Array<Record<string, unknown>>;
 }
@@ -95,12 +107,11 @@ const SETTINGS = {
 
 describe("workbench add-file translation inheritance planner", () => {
   it("不继承时保留解析结果", () => {
-    const plan = create_workbench_add_file_plan({
+    const plan = create_single_file_add_plan({
       state: create_state({
         "1": create_item({ item_id: 1, src: "hello", dst: "你好" }),
       }),
       parsed_file: create_parsed_file([{ src: "hello", dst: "", row: 1 }]),
-      settings: SETTINGS,
       inheritance_mode: "none",
     });
 
@@ -109,7 +120,7 @@ describe("workbench add-file translation inheritance planner", () => {
   });
 
   it("唯一已完成译文会自动继承", () => {
-    const plan = create_workbench_add_file_plan({
+    const plan = create_single_file_add_plan({
       state: create_state({
         "1": create_item({
           item_id: 1,
@@ -120,7 +131,6 @@ describe("workbench add-file translation inheritance planner", () => {
         }),
       }),
       parsed_file: create_parsed_file([{ src: "hello", dst: "", row: 1 }]),
-      settings: SETTINGS,
       inheritance_mode: "inherit",
     });
 
@@ -133,7 +143,7 @@ describe("workbench add-file translation inheritance planner", () => {
   });
 
   it("多候选时自动选择出现次数最多且并列取最早出现的译文", () => {
-    const plan = create_workbench_add_file_plan({
+    const plan = create_single_file_add_plan({
       state: create_state({
         "1": create_item({ item_id: 1, src: "hello", dst: "甲" }),
         "2": create_item({ item_id: 2, src: "hello", dst: "乙" }),
@@ -145,7 +155,6 @@ describe("workbench add-file translation inheritance planner", () => {
         { src: "hello", dst: "", row: 1 },
         { src: "tie", dst: "", row: 2 },
       ]),
-      settings: SETTINGS,
       inheritance_mode: "inherit",
     });
 
@@ -156,12 +165,11 @@ describe("workbench add-file translation inheritance planner", () => {
   });
 
   it("结构性状态不会被继承状态覆盖", () => {
-    const plan = create_workbench_add_file_plan({
+    const plan = create_single_file_add_plan({
       state: create_state({
         "1": create_item({ item_id: 1, src: "hello", dst: "你好" }),
       }),
       parsed_file: create_parsed_file([{ src: "hello", dst: "", row: 1, status: "EXCLUDED" }]),
-      settings: SETTINGS,
       inheritance_mode: "inherit",
     });
 

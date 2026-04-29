@@ -42,7 +42,6 @@ export type NameFieldConfirmState =
 export type NameFieldRunState = {
   extracting: boolean;
   translating: boolean;
-  current_translating_row_id: NameFieldRowId | null;
 };
 
 export type NameFieldDialogState =
@@ -59,7 +58,7 @@ export type NameFieldDialogState =
       saving: boolean;
     };
 
-export type NameFieldSortField = "index" | "src" | "dst" | "status";
+export type NameFieldSortField = "src" | "dst";
 
 export type NameFieldSortState =
   | {

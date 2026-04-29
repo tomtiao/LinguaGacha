@@ -2,13 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyWorkbenchItemsDeltaToCache,
-  buildWorkbenchView,
   createWorkbenchViewCache,
 } from "@/pages/workbench-page/workbench-view";
 
-describe("buildWorkbenchView", () => {
+describe("createWorkbenchViewCache", () => {
   it("会保持文件排序并一次遍历聚合工作台统计", () => {
-    const view = buildWorkbenchView({
+    const snapshot = createWorkbenchViewCache({
       files: {
         "chapter02.txt": {
           rel_path: "chapter02.txt",
@@ -83,9 +82,9 @@ describe("buildWorkbenchView", () => {
           line: 3,
         },
       },
-    });
+    }).snapshot;
 
-    expect(view.entries).toEqual([
+    expect(snapshot.entries).toEqual([
       {
         rel_path: "chapter01.txt",
         file_type: "TXT",
@@ -107,7 +106,7 @@ describe("buildWorkbenchView", () => {
         item_count: 0,
       },
     ]);
-    expect(view.summary).toEqual({
+    expect(snapshot).toMatchObject({
       file_count: 4,
       total_items: 7,
       translation_stats: {

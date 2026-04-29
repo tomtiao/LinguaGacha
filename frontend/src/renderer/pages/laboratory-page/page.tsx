@@ -21,7 +21,7 @@ const HELP_LABEL_KEY_BY_FIELD: Record<LaboratoryHelpField, LocaleKey> = {
   mtool_optimizer_enable: "laboratory_page.fields.mtool_optimizer_enable.help_label",
 };
 
-export function LaboratoryPage(props: ScreenComponentProps): JSX.Element {
+export function LaboratoryPage(_props: ScreenComponentProps): JSX.Element {
   const { locale, t } = useI18n();
   const laboratory_page_state = useLaboratoryPageState();
   const boolean_segmented_options = [
@@ -70,10 +70,7 @@ export function LaboratoryPage(props: ScreenComponentProps): JSX.Element {
   }
 
   return (
-    <div
-      className="laboratory-page page-shell page-shell--full"
-      data-sidebar-collapsed={String(props.is_sidebar_collapsed)}
-    >
+    <div className="laboratory-page page-shell page-shell--full">
       <section className="laboratory-page__list" aria-label={t("laboratory_page.title")}>
         <SettingCardRow
           title={t("laboratory_page.fields.mtool_optimizer_enable.title")}

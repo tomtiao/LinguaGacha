@@ -770,7 +770,7 @@ export type UseWorkbenchLiveStateResult = {
   close_dialog: () => void;
 };
 
-export type UseWorkbenchLiveStateOptions = {
+type UseWorkbenchLiveStateOptions = {
   createProjectPagesBarrierCheckpoint?: () => ProjectPagesBarrierCheckpoint;
   waitForProjectPagesBarrier?: (
     kind: Exclude<ProjectPagesBarrierKind, "project_warmup">,

@@ -14,15 +14,12 @@ type WorkbenchPageProps = {
   is_sidebar_collapsed: boolean;
 };
 
-export function WorkbenchPage(props: WorkbenchPageProps): JSX.Element {
+export function WorkbenchPage(_props: WorkbenchPageProps): JSX.Element {
   const { t } = useI18n();
   const workbench_state = useCachedWorkbenchLiveState<UseWorkbenchLiveStateResult>();
 
   return (
-    <div
-      className="workbench-page page-shell page-shell--full"
-      data-sidebar-collapsed={String(props.is_sidebar_collapsed)}
-    >
+    <div className="workbench-page page-shell page-shell--full">
       <WorkbenchStatsSection
         stats={workbench_state.stats}
         stats_mode={workbench_state.stats_mode}

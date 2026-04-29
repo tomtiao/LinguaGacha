@@ -1,7 +1,3 @@
-.laboratory-page {
-  min-height: 100%;
-}
-
 .laboratory-page__list {
   display: flex;
   flex-direction: column;

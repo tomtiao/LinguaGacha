@@ -82,21 +82,7 @@ export type ModelCategorySnapshot = {
   models: ModelEntrySnapshot[];
 };
 
-type ModelTestKeyResult = {
-  masked_key: string;
-  success: boolean;
-  input_tokens: number;
-  output_tokens: number;
-  response_time_ms: number;
-  error_reason: string;
-};
-
 export type ModelTestResult = {
   success: boolean;
   result_msg: string;
-  total_count: number;
-  success_count: number;
-  failure_count: number;
-  total_response_time_ms: number;
-  key_results: ModelTestKeyResult[];
 };

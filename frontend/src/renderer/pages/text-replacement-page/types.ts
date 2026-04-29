@@ -21,7 +21,6 @@ export type TextReplacementDialogState = {
   target_entry_id: TextReplacementEntryId | null;
   insert_after_entry_id: TextReplacementEntryId | null;
   draft_entry: TextReplacementEntry;
-  dirty: boolean;
   saving: boolean;
   validation_message: string | null;
 };
@@ -110,7 +109,6 @@ export type UseTextReplacementPageStateResult = {
   filtered_entries: TextReplacementVisibleEntry[];
   filter_state: TextReplacementFilterState;
   sort_state: TextReplacementSortState;
-  has_active_filters: boolean;
   invalid_filter_message: string | null;
   readonly: boolean;
   drag_disabled: boolean;
@@ -154,7 +152,6 @@ export type UseTextReplacementPageStateResult = {
     active_entry_id: TextReplacementEntryId,
     over_entry_id: TextReplacementEntryId,
   ) => Promise<void>;
-  move_selected_entries: (direction: "up" | "down" | "top" | "bottom") => Promise<void>;
   query_entry_source: (entry_id: TextReplacementEntryId) => Promise<void>;
   search_entry_relations_from_statistics: (entry_id: TextReplacementEntryId) => void;
   save_dialog_entry: () => Promise<void>;

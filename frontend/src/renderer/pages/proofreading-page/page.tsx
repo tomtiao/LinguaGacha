@@ -21,7 +21,7 @@ const PROOFREADING_SCOPE_LABEL_KEY_BY_SCOPE = {
 
 const PROOFREADING_SEARCH_SCOPES: ProofreadingSearchScope[] = ["all", "src", "dst"];
 
-export function ProofreadingPage(props: ScreenComponentProps): JSX.Element {
+export function ProofreadingPage(_props: ScreenComponentProps): JSX.Element {
   const { t } = useI18n();
   const proofreading_page_state = useCachedProofreadingPageState<UseProofreadingPageStateResult>();
   const toolbar_disabled =
@@ -53,10 +53,7 @@ export function ProofreadingPage(props: ScreenComponentProps): JSX.Element {
     });
 
   return (
-    <div
-      className="proofreading-page page-shell page-shell--full"
-      data-sidebar-collapsed={String(props.is_sidebar_collapsed)}
-    >
+    <div className="proofreading-page page-shell page-shell--full">
       <SearchBar
         variant="replace"
         keyword={proofreading_page_state.search_keyword}

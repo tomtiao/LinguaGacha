@@ -7,7 +7,6 @@ import {
   compress_log_message_text,
   filter_log_events,
   format_log_timestamp,
-  get_log_message_first_line,
   sort_log_events_latest_first,
 } from "@/pages/log-window-page/logic";
 
@@ -23,11 +22,6 @@ function build_event(overrides: Partial<LogEvent>): LogEvent {
 }
 
 describe("log-window logic", () => {
-  it("提取消息第一行并处理空白消息", () => {
-    expect(get_log_message_first_line("第一行\n第二行")).toBe("第一行");
-    expect(get_log_message_first_line("\n第二行")).toBe("(blank)");
-  });
-
   it("压缩多行日志消息以用于表格预览", () => {
     expect(compress_log_message_text("第一行\n第二行\r\n第三行")).toBe("第一行 ↵ 第二行 ↵ 第三行");
     expect(compress_log_message_text("\n")).toBe("(blank)");

@@ -177,17 +177,14 @@ export function filter_name_field_rows(args: {
     return matches(row.src) || matches(row.dst);
   });
 
-  if (args.sort_state.field === null || args.sort_state.direction === null) {
+  const sort_state = args.sort_state;
+  if (sort_state.field === null || sort_state.direction === null) {
     return filtered_rows;
   }
 
-  const direction = args.sort_state.direction === "ascending" ? 1 : -1;
+  const direction = sort_state.direction === "ascending" ? 1 : -1;
+  const field = sort_state.field;
   return [...filtered_rows].sort((left_row, right_row) => {
-    const field = args.sort_state.field;
-    if (field === "index" || field === null) {
-      return 0;
-    }
-
     return direction * left_row[field].localeCompare(right_row[field], "zh-Hans-CN");
   });
 }

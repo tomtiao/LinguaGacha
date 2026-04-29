@@ -317,12 +317,6 @@ describe("useBasicSettingsState", () => {
     await render_hook();
 
     expect(latest_state).not.toBeNull();
-    toast_fixture.current.push_toast.mockClear();
-
-    await act(async () => {
-      await latest_state?.refresh_snapshot();
-    });
-    await flush_async_updates();
 
     expect(latest_state?.snapshot.request_timeout).toBe(300);
     expect(toast_fixture.current.push_toast).toHaveBeenCalledTimes(1);

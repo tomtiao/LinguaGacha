@@ -333,16 +333,3 @@ export function applyWorkbenchItemsDeltaToCache(args: {
     snapshot,
   };
 }
-
-export function buildWorkbenchView(args: BuildWorkbenchViewArgs) {
-  const cache = createWorkbenchViewCache(args);
-  return {
-    entries: cache.snapshot.entries,
-    summary: {
-      file_count: cache.snapshot.file_count,
-      total_items: cache.snapshot.total_items,
-      translation_stats: cache.snapshot.translation_stats,
-      analysis_stats: cache.snapshot.analysis_stats,
-    },
-  };
-}

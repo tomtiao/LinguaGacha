@@ -1,4 +1,4 @@
-export type WorkbenchTaskRuntimeKind = "translation" | "analysis";
+type WorkbenchTaskRuntimeKind = "translation" | "analysis";
 
 type TaskSnapshotWithKind = {
   task_type?: unknown;
