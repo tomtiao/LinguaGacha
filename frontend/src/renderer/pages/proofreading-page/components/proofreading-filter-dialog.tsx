@@ -15,6 +15,7 @@ import { Badge } from "@/shadcn/badge";
 import { AppButton } from "@/widgets/app-button/app-button";
 import { Input } from "@/shadcn/input";
 import { ScrollArea } from "@/shadcn/scroll-area";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shadcn/tooltip";
 import { AppPageDialog } from "@/widgets/app-page-dialog/app-page-dialog";
 
 type ProofreadingFilterDialogProps = {
@@ -83,20 +84,27 @@ function FilterListRow(props: {
   onClick: () => void;
 }): JSX.Element {
   return (
-    <button
-      type="button"
-      className="proofreading-page__filter-list-row"
-      data-selected={props.selected ? "true" : undefined}
-      onClick={props.onClick}
-    >
-      <span className="proofreading-page__filter-list-row-copy">{props.label}</span>
-      <Badge
-        variant="secondary"
-        className="proofreading-page__filter-count-badge min-w-5 justify-center tabular-nums"
-      >
-        {props.count.toString()}
-      </Badge>
-    </button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className="proofreading-page__filter-list-row"
+          data-selected={props.selected ? "true" : undefined}
+          onClick={props.onClick}
+        >
+          <span className="proofreading-page__filter-list-row-copy">{props.label}</span>
+          <Badge
+            variant="secondary"
+            className="proofreading-page__filter-count-badge min-w-5 justify-center tabular-nums"
+          >
+            {props.count.toString()}
+          </Badge>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" sideOffset={8}>
+        <p className="proofreading-page__filter-list-row-tooltip">{props.label}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
