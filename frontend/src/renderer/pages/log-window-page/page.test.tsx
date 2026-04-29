@@ -135,30 +135,6 @@ vi.mock("@/shadcn/card", () => {
   };
 });
 
-vi.mock("@/shadcn/input", () => {
-  return {
-    Input: (props: {
-      onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
-      placeholder?: string;
-      value?: string;
-    }) => <input value={props.value} placeholder={props.placeholder} onChange={props.onChange} />,
-  };
-});
-
-vi.mock("@/shadcn/select", () => {
-  return {
-    Select: (props: { children: ReactNode }) => <div>{props.children}</div>,
-    SelectContent: (props: { children: ReactNode }) => <div>{props.children}</div>,
-    SelectItem: (props: { children: ReactNode; value: string }) => (
-      <div data-value={props.value}>{props.children}</div>
-    ),
-    SelectTrigger: (props: { children: ReactNode }) => (
-      <button type="button">{props.children}</button>
-    ),
-    SelectValue: () => <span />,
-  };
-});
-
 vi.mock("@/shadcn/tooltip", () => {
   return {
     Tooltip: (props: { children: ReactNode }) => <>{props.children}</>,

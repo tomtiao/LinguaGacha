@@ -101,7 +101,6 @@ function create_empty_dialog_state(): TextReplacementDialogState {
     target_entry_id: null,
     insert_after_entry_id: null,
     draft_entry: clone_entry(EMPTY_ENTRY),
-    dirty: false,
     saving: false,
     validation_message: null,
   };
@@ -211,77 +210,6 @@ function build_default_preset_update_payload(
   return {
     [config.default_preset_settings_key]: value,
   };
-}
-
-function move_selected_entries_by_direction(
-  entries: TextReplacementEntry[],
-  entry_ids: TextReplacementEntryId[],
-  selected_entry_ids: TextReplacementEntryId[],
-  direction: "up" | "down" | "top" | "bottom",
-): TextReplacementEntry[] {
-  const selected_id_set = new Set(selected_entry_ids);
-  const indexed_entries = entry_ids.map((entry_id, index) => ({
-    entry_id,
-    entry: entries[index],
-  }));
-  const moving_entries = indexed_entries.filter((item) => {
-    return selected_id_set.has(item.entry_id);
-  });
-
-  if (moving_entries.length === 0) {
-    return entries;
-  }
-
-  const remaining_entries = indexed_entries.filter((item) => {
-    return !selected_id_set.has(item.entry_id);
-  });
-  const selected_indexes = entry_ids.flatMap((entry_id, index) => {
-    return selected_id_set.has(entry_id) ? [index] : [];
-  });
-
-  if (selected_indexes.length === 0) {
-    return entries;
-  }
-
-  const first_selected_index = selected_indexes[0] ?? -1;
-  const last_selected_index = selected_indexes[selected_indexes.length - 1] ?? -1;
-  if (first_selected_index < 0 || last_selected_index < 0) {
-    return entries;
-  }
-
-  let insert_index = 0;
-
-  if (direction === "top") {
-    insert_index = 0;
-  } else if (direction === "bottom") {
-    insert_index = remaining_entries.length;
-  } else if (direction === "up") {
-    if (first_selected_index === 0) {
-      return entries;
-    }
-
-    const previous_entry_id = entry_ids[first_selected_index - 1];
-    insert_index = remaining_entries.findIndex((item) => {
-      return item.entry_id === previous_entry_id;
-    });
-    if (insert_index < 0) {
-      return entries;
-    }
-  } else {
-    if (last_selected_index === entry_ids.length - 1) {
-      return entries;
-    }
-
-    const next_entry_id = entry_ids[last_selected_index + 1];
-    const next_entry_index = remaining_entries.findIndex((item) => {
-      return item.entry_id === next_entry_id;
-    });
-    insert_index = next_entry_index < 0 ? remaining_entries.length : next_entry_index + 1;
-  }
-
-  const next_entries = [...remaining_entries];
-  next_entries.splice(insert_index, 0, ...moving_entries);
-  return next_entries.map((item) => item.entry);
 }
 
 function build_text_replacement_statistics_state_from_cache(
@@ -762,7 +690,6 @@ export function useTextReplacementPageState(
       target_entry_id: null,
       insert_after_entry_id,
       draft_entry: clone_entry(EMPTY_ENTRY),
-      dirty: false,
       saving: false,
       validation_message: null,
     });
@@ -790,7 +717,6 @@ export function useTextReplacementPageState(
         target_entry_id: entry_id,
         insert_after_entry_id: null,
         draft_entry: clone_entry(target_entry),
-        dirty: false,
         saving: false,
         validation_message: null,
       });
@@ -802,7 +728,6 @@ export function useTextReplacementPageState(
     set_dialog_state((previous_state) => {
       return {
         ...previous_state,
-        dirty: true,
         validation_message: null,
         draft_entry: {
           ...previous_state.draft_entry,
@@ -942,33 +867,6 @@ export function useTextReplacementPageState(
         current_active_entry_id,
         over_entry_id,
       );
-
-      set_entries(next_entries);
-      const saved = await save_entries_snapshot(next_entries);
-      if (!saved) {
-        set_entries(previous_entries);
-      }
-    },
-    [drag_disabled, entries, entry_ids, readonly, save_entries_snapshot, selected_entry_ids],
-  );
-
-  const move_selected_entries = useCallback(
-    async (direction: "up" | "down" | "top" | "bottom"): Promise<void> => {
-      if (readonly || drag_disabled || selected_entry_ids.length === 0) {
-        return;
-      }
-
-      const previous_entries = entries;
-      const next_entries = move_selected_entries_by_direction(
-        entries,
-        entry_ids,
-        selected_entry_ids,
-        direction,
-      );
-
-      if (next_entries === entries) {
-        return;
-      }
 
       set_entries(next_entries);
       const saved = await save_entries_snapshot(next_entries);
@@ -1633,7 +1531,6 @@ export function useTextReplacementPageState(
     filtered_entries,
     filter_state,
     sort_state,
-    has_active_filters,
     invalid_filter_message: filter_result.invalid_regex_message,
     readonly,
     drag_disabled,
@@ -1672,7 +1569,6 @@ export function useTextReplacementPageState(
     toggle_regex_for_selected,
     toggle_case_sensitive_for_selected,
     reorder_selected_entries,
-    move_selected_entries,
     query_entry_source,
     search_entry_relations_from_statistics,
     save_dialog_entry,

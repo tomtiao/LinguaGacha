@@ -46,7 +46,6 @@ import type {
 
 type TranslateSinglePayload = {
   success?: boolean;
-  status?: string;
   dst?: string;
 };
 
@@ -106,8 +105,11 @@ function create_empty_run_state(): NameFieldRunState {
   return {
     extracting: false,
     translating: false,
-    current_translating_row_id: null,
   };
+}
+
+function is_name_field_sort_field(column_id: string): column_id is NameFieldSortField {
+  return column_id === "src" || column_id === "dst";
 }
 
 function normalize_glossary_entry(entry: GlossaryEntry): GlossaryEntry {
@@ -234,7 +236,6 @@ export function useNameFieldExtractionPageState() {
     set_run_state({
       extracting: true,
       translating: false,
-      current_translating_row_id: null,
     });
 
     try {
@@ -307,8 +308,13 @@ export function useNameFieldExtractionPageState() {
       return;
     }
 
+    if (!is_name_field_sort_field(next_sort_state.column_id)) {
+      set_sort_state(create_empty_sort_state());
+      return;
+    }
+
     set_sort_state({
-      field: next_sort_state.column_id as NameFieldSortField,
+      field: next_sort_state.column_id,
       direction: next_sort_state.direction,
     });
   }, []);
@@ -387,7 +393,6 @@ export function useNameFieldExtractionPageState() {
     set_run_state({
       extracting: false,
       translating: true,
-      current_translating_row_id: null,
     });
 
     try {
@@ -395,7 +400,6 @@ export function useNameFieldExtractionPageState() {
         set_run_state({
           extracting: false,
           translating: true,
-          current_translating_row_id: row.id,
         });
         set_rows((previous_rows) => {
           return previous_rows.map((current_row) => {

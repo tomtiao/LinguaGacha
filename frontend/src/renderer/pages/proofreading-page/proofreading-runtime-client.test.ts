@@ -211,9 +211,6 @@ describe("createProofreadingRuntimeClient", () => {
     worker?.dispatch_message(hydrate_request?.id ?? 0, {
       revision: 1,
       project_id: "demo",
-      total_item_count: 0,
-      review_item_count: 0,
-      warning_item_count: 0,
       default_filters: create_list_query().filters,
     });
 
@@ -234,13 +231,6 @@ describe("createProofreadingRuntimeClient", () => {
       view_id: "demo-view",
       row_count: 0,
       window_start: 0,
-      summary: {
-        total_items: 0,
-        filtered_items: 0,
-        warning_items: 0,
-      },
-      default_filters: create_list_query().filters,
-      filters: create_list_query().filters,
       window_rows: [],
       invalid_regex_message: null,
     });

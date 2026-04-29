@@ -53,10 +53,7 @@ export function TextReplacementPage(props: TextReplacementPageProps): JSX.Elemen
     });
 
   return (
-    <div
-      className="text-replacement-page page-shell page-shell--full"
-      data-sidebar-collapsed={String(props.is_sidebar_collapsed)}
-    >
+    <div className="text-replacement-page page-shell page-shell--full">
       <SearchBar
         variant="filter"
         keyword={page_state.filter_state.keyword}

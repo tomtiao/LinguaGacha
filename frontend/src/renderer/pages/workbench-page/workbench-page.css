@@ -94,10 +94,6 @@
   color: var(--ui-success);
 }
 
-.workbench-page__stat-card-value--warning {
-  color: var(--ui-warning);
-}
-
 .workbench-page__stat-card-value--failure {
   color: var(--ui-failure);
 }

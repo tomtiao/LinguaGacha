@@ -393,7 +393,11 @@ describe("useGlossaryPageState", () => {
       },
     });
     await act(async () => {
-      latest_state?.select_entry("梨::2", { extend: false, range: false });
+      latest_state?.apply_table_selection({
+        selected_row_ids: ["梨::2"],
+        active_row_id: "梨::2",
+        anchor_row_id: "梨::2",
+      });
     });
     await act(async () => {
       await latest_state?.delete_selected_entries();

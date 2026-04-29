@@ -8,9 +8,6 @@
   gap: var(--ui-list-gap-dense);
 }
 
-.expert-settings-page__menu-button {
-}
-
 .expert-settings-page__number-field {
   display: flex;
   align-items: center;

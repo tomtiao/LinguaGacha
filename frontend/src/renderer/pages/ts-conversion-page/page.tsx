@@ -28,7 +28,7 @@ const DIRECTION_LABEL_KEY_BY_DIRECTION = {
   s2t: "ts_conversion_page.direction.s2t",
 } satisfies Record<TsConversionDirection, LocaleKey>;
 
-export function TsConversionPage(props: ScreenComponentProps): JSX.Element {
+export function TsConversionPage(_props: ScreenComponentProps): JSX.Element {
   const { t } = useI18n();
   const page_state = useTsConversionPageState();
   const boolean_segmented_options = [
@@ -43,10 +43,7 @@ export function TsConversionPage(props: ScreenComponentProps): JSX.Element {
   ] as const;
 
   return (
-    <div
-      className="ts-conversion-page page-shell page-shell--full"
-      data-sidebar-collapsed={String(props.is_sidebar_collapsed)}
-    >
+    <div className="ts-conversion-page page-shell page-shell--full">
       <section className="ts-conversion-page__list" aria-label={t("ts_conversion_page.title")}>
         <SettingCardRow
           title={t("ts_conversion_page.fields.direction.title")}
@@ -155,7 +152,6 @@ export function TsConversionPage(props: ScreenComponentProps): JSX.Element {
       <AppAlertDialog
         open={page_state.confirm_state.open}
         description={t("ts_conversion_page.confirm.description")}
-        submitting={page_state.confirm_state.submitting}
         onConfirm={page_state.confirm_conversion}
         onClose={page_state.close_confirm_dialog}
       />

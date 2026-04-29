@@ -156,9 +156,6 @@ describe("createProofreadingRuntimeEngine", () => {
     expect(sync_state).toMatchObject({
       revision: 3,
       project_id: "demo",
-      total_item_count: 2,
-      review_item_count: 2,
-      warning_item_count: 1,
       default_filters: {
         warning_types: [...PROOFREADING_WARNING_CODES],
         statuses: DEFAULT_STATUS_FILTERS,
@@ -177,11 +174,7 @@ describe("createProofreadingRuntimeEngine", () => {
     expect(list_view).toMatchObject({
       revision: 3,
       project_id: "demo",
-      summary: {
-        total_items: 2,
-        filtered_items: 2,
-        warning_items: 1,
-      },
+      row_count: 2,
     });
     expect(list_view.window_rows.map((item) => item.row_id)).toEqual(["1", "2"]);
     expect(list_view.window_rows[0]?.item.failed_glossary_terms).toEqual([["foo", "baz"]]);
@@ -189,7 +182,7 @@ describe("createProofreadingRuntimeEngine", () => {
     const filter_panel = engine.build_filter_panel({
       filters: sync_state.default_filters,
     });
-    expect(filter_panel.filters.warning_types).toEqual([...PROOFREADING_WARNING_CODES]);
+    expect(filter_panel.available_warning_types).toEqual([...PROOFREADING_WARNING_CODES]);
     expect(filter_panel.status_count_by_code).toMatchObject({
       NONE: 1,
       PROCESSED: 1,
@@ -236,9 +229,6 @@ describe("createProofreadingRuntimeEngine", () => {
     expect(delta_state).toMatchObject({
       revision: 4,
       project_id: "demo",
-      total_item_count: 2,
-      review_item_count: 2,
-      warning_item_count: 0,
       default_filters: {
         warning_types: [...PROOFREADING_WARNING_CODES],
         statuses: DEFAULT_STATUS_FILTERS,
@@ -254,11 +244,7 @@ describe("createProofreadingRuntimeEngine", () => {
       is_regex: false,
       sort_state: null,
     });
-    expect(list_view.summary).toMatchObject({
-      total_items: 2,
-      filtered_items: 2,
-      warning_items: 0,
-    });
+    expect(list_view.row_count).toBe(2);
     expect(list_view.window_rows[0]?.item.dst).toBe("baz");
     expect(list_view.window_rows[0]?.item.failed_glossary_terms).toEqual([]);
     expect(list_view.window_rows[1]?.item.dst).toBe("beta");
@@ -284,14 +270,11 @@ describe("createProofreadingRuntimeEngine", () => {
     const engine = createProofreadingRuntimeEngine();
 
     const sync_state = engine.hydrate_full(create_skipped_status_hydration_input());
-    expect(sync_state.review_item_count).toBe(6);
-    expect(sync_state.warning_item_count).toBe(0);
     expect(sync_state.default_filters.statuses).toEqual(DEFAULT_STATUS_FILTERS);
 
     const filter_panel = engine.build_filter_panel({
       filters: sync_state.default_filters,
     });
-    expect(filter_panel.filters.statuses).toEqual(DEFAULT_STATUS_FILTERS);
     expect(filter_panel.available_statuses).toEqual(ALL_STATUS_FILTERS);
     expect(filter_panel.status_count_by_code).toMatchObject({
       EXCLUDED: 1,

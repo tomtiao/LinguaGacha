@@ -13,7 +13,7 @@ type ToolboxEntry = {
   id: string;
   title_key: LocaleKey;
   description_key: LocaleKey;
-  route_id?: RouteId;
+  route_id: RouteId;
 };
 
 const TOOLBOX_ENTRIES: readonly ToolboxEntry[] = [
@@ -37,25 +37,19 @@ const DESCRIPTION_COMPONENT_MAP: RichTextComponentMap = {
   },
 };
 
-export function ToolboxPage(props: ScreenComponentProps): JSX.Element {
+export function ToolboxPage(_props: ScreenComponentProps): JSX.Element {
   const { t } = useI18n();
   const { navigate_to_route } = useAppNavigation();
 
   return (
-    <div
-      className="toolbox-page page-shell page-shell--full"
-      data-sidebar-collapsed={String(props.is_sidebar_collapsed)}
-    >
+    <div className="toolbox-page page-shell page-shell--full">
       <section className="toolbox-page__grid" aria-label={t("toolbox_page.title")}>
         {TOOLBOX_ENTRIES.map((entry) => (
           <Card
             key={entry.id}
             className="toolbox-page__card"
-            data-clickable={entry.route_id === undefined ? undefined : "true"}
             onClick={() => {
-              if (entry.route_id !== undefined) {
-                navigate_to_route(entry.route_id);
-              }
+              navigate_to_route(entry.route_id);
             }}
           >
             <CardHeader className="toolbox-page__card-header">

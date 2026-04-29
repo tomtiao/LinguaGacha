@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { api_fetch } from "@/app/desktop-api";
+import type { ProjectStorePromptSlice } from "@/app/project/store/project-store";
 import { createProjectStoreReplaceSectionPatch } from "@/app/project/store/project-store";
 import { getPromptSlice, replacePromptSlice } from "@/app/project/quality/quality-runtime";
 import {
@@ -25,15 +26,6 @@ import type {
   CustomPromptTemplate,
   UseCustomPromptPageStateResult,
 } from "@/pages/custom-prompt-page/types";
-
-type PromptSnapshot = {
-  revision?: number;
-  enabled?: boolean;
-  meta?: {
-    enabled?: boolean;
-  };
-  text?: string;
-};
 
 type PromptTemplatePayload = {
   template?: Partial<CustomPromptTemplate>;
@@ -77,16 +69,6 @@ function create_empty_preset_input_state(): CustomPromptPresetInputState {
   };
 }
 
-export function normalize_prompt_snapshot(snapshot: PromptSnapshot | undefined): PromptSnapshot {
-  return {
-    revision: Number(snapshot?.revision ?? 0),
-    meta: {
-      enabled: Boolean(snapshot?.meta?.enabled ?? snapshot?.enabled),
-    },
-    text: String(snapshot?.text ?? ""),
-  };
-}
-
 function normalize_prompt_template(
   template: Partial<CustomPromptTemplate> | undefined,
 ): CustomPromptTemplate {
@@ -102,7 +84,7 @@ function normalize_prompt_text(text: string): string {
 }
 
 function resolve_editor_prompt_text(
-  snapshot: PromptSnapshot,
+  snapshot: ProjectStorePromptSlice,
   template: CustomPromptTemplate,
 ): string {
   const normalized_text = normalize_prompt_text(String(snapshot.text ?? ""));
@@ -198,7 +180,6 @@ export function useCustomPromptPageState(
     return create_empty_prompt_template();
   });
   const [prompt_text, set_prompt_text] = useState("");
-  const [, set_revision] = useState(0);
   const [enabled, set_enabled] = useState(false);
   const [preset_items, set_preset_items] = useState<CustomPromptPresetItem[]>([]);
   const [preset_menu_open, set_preset_menu_open] = useState(false);
@@ -219,11 +200,10 @@ export function useCustomPromptPageState(
   }, [template]);
 
   const apply_snapshot = useCallback(
-    (snapshot: PromptSnapshot, template_override?: CustomPromptTemplate): void => {
+    (snapshot: ProjectStorePromptSlice, template_override?: CustomPromptTemplate): void => {
       const resolved_template = template_override ?? template_ref.current;
 
-      set_revision(Number(snapshot.revision ?? 0));
-      set_enabled(Boolean(snapshot.meta?.enabled));
+      set_enabled(snapshot.enabled);
       set_prompt_text(resolve_editor_prompt_text(snapshot, resolved_template));
     },
     [],
@@ -240,7 +220,7 @@ export function useCustomPromptPageState(
   const apply_store_snapshot = useCallback(
     (template_override?: CustomPromptTemplate): void => {
       const prompt_slice = getPromptSlice(project_store_state.prompts, config.task_type);
-      apply_snapshot(normalize_prompt_snapshot(prompt_slice), template_override);
+      apply_snapshot(prompt_slice, template_override);
     },
     [apply_snapshot, config.task_type, project_store_state.prompts],
   );
@@ -320,7 +300,6 @@ export function useCustomPromptPageState(
     if (!project_snapshot.loaded) {
       set_template(create_empty_prompt_template());
       set_prompt_text("");
-      set_revision(0);
       set_enabled(false);
       set_preset_items([]);
       set_preset_menu_open(false);

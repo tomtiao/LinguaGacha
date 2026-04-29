@@ -7,7 +7,7 @@ import type {
   TsConversionRuntimeItem,
 } from "@/pages/ts-conversion-page/types";
 
-export type TsConversionTextConverter = (text: string) => string;
+type TsConversionTextConverter = (text: string) => string;
 
 type BuildConvertedItemsInput = {
   items: TsConversionRuntimeItem[];
@@ -67,7 +67,7 @@ export function normalize_ts_conversion_runtime_items(
   });
 }
 
-export function create_ts_conversion_converter(
+function create_ts_conversion_converter(
   direction: TsConversionDirection,
 ): TsConversionTextConverter {
   if (direction === "s2t") {

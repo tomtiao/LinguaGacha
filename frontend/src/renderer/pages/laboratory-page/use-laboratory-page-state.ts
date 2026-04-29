@@ -25,9 +25,7 @@ type SettingsUpdateRequest = Record<string, unknown>;
 type UseLaboratoryPageStateResult = {
   snapshot: LaboratorySnapshot;
   pending_state: LaboratoryPendingState;
-  is_refreshing: boolean;
   is_task_busy: boolean;
-  refresh_snapshot: () => Promise<void>;
   update_mtool_optimizer_enable: (next_checked: boolean) => Promise<void>;
 };
 
@@ -58,7 +56,6 @@ export function useLaboratoryPageState(): UseLaboratoryPageStateResult {
   const [pending_state, set_pending_state] = useState<LaboratoryPendingState>(() => {
     return create_pending_state();
   });
-  const [is_refreshing, set_is_refreshing] = useState<boolean>(false);
   const snapshot_ref = useRef<LaboratorySnapshot>(snapshot);
   const project_prefilter_client_ref = useRef(createProjectPrefilterClient());
   const context_snapshot = useMemo(() => {
@@ -85,8 +82,6 @@ export function useLaboratoryPageState(): UseLaboratoryPageStateResult {
   }, []);
 
   const refresh_snapshot = useCallback(async (): Promise<void> => {
-    set_is_refreshing(true);
-
     try {
       const next_settings_snapshot = await refresh_settings();
       set_snapshot(build_laboratory_snapshot(next_settings_snapshot));
@@ -95,8 +90,6 @@ export function useLaboratoryPageState(): UseLaboratoryPageStateResult {
         "error",
         error instanceof Error ? error.message : t("laboratory_page.feedback.refresh_failed"),
       );
-    } finally {
-      set_is_refreshing(false);
     }
   }, [push_toast, refresh_settings, t]);
 
@@ -257,19 +250,10 @@ export function useLaboratoryPageState(): UseLaboratoryPageStateResult {
     return {
       snapshot,
       pending_state,
-      is_refreshing,
       is_task_busy,
-      refresh_snapshot,
       update_mtool_optimizer_enable,
     };
-  }, [
-    is_refreshing,
-    is_task_busy,
-    pending_state,
-    refresh_snapshot,
-    snapshot,
-    update_mtool_optimizer_enable,
-  ]);
+  }, [is_task_busy, pending_state, snapshot, update_mtool_optimizer_enable]);
 
   return value;
 }

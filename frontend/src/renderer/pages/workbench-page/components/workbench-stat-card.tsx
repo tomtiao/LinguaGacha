@@ -9,7 +9,7 @@ type WorkbenchStatCardProps = {
   title: string;
   value: number;
   unit: string;
-  accent?: "skipped" | "success" | "warning" | "failure";
+  accent?: "skipped" | "success" | "failure";
   toggle_tooltip?: string;
   on_toggle?: () => void;
 };
@@ -66,7 +66,6 @@ export function WorkbenchStatCard(props: WorkbenchStatCardProps): JSX.Element {
                   "workbench-page__stat-card-value",
                   props.accent === "skipped" && "workbench-page__stat-card-value--skipped",
                   props.accent === "success" && "workbench-page__stat-card-value--success",
-                  props.accent === "warning" && "workbench-page__stat-card-value--warning",
                   props.accent === "failure" && "workbench-page__stat-card-value--failure",
                 )}
               >

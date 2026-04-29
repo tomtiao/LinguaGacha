@@ -30,7 +30,6 @@ import { merge_glossary_entries } from "@/pages/glossary-page/merge";
 import {
   are_glossary_entry_ids_equal,
   build_glossary_entry_id,
-  collect_range_selection,
   reorder_selected_group,
 } from "@/pages/glossary-page/components/glossary-selection";
 import type {
@@ -244,11 +243,9 @@ type UseGlossaryPageStateResult = {
   filtered_entries: GlossaryVisibleEntry[];
   filter_state: GlossaryFilterState;
   sort_state: GlossarySortState;
-  has_active_filters: boolean;
   invalid_filter_message: string | null;
   readonly: boolean;
   drag_disabled: boolean;
-  statistics_state: GlossaryStatisticsState;
   statistics_ready: boolean;
   statistics_sort_available: boolean;
   statistics_badge_by_entry_id: Record<GlossaryEntryId, GlossaryStatisticsBadgeState>;
@@ -265,7 +262,6 @@ type UseGlossaryPageStateResult = {
   update_filter_regex: (next_is_regex: boolean) => void;
   apply_table_sort_state: (next_sort_state: AppTableSortState | null) => void;
   apply_table_selection: (payload: AppTableSelectionChange) => void;
-  clear_all_filters: () => void;
   update_enabled: (next_enabled: boolean) => Promise<void>;
   open_create_dialog: () => void;
   open_edit_dialog: (entry_id: GlossaryEntryId) => void;
@@ -281,7 +277,6 @@ type UseGlossaryPageStateResult = {
   request_delete_preset: (preset_item: GlossaryPresetItem) => void;
   set_default_preset: (virtual_id: string) => Promise<void>;
   cancel_default_preset: () => Promise<void>;
-  select_entry: (entry_id: GlossaryEntryId, options: { extend: boolean; range: boolean }) => void;
   delete_selected_entries: () => Promise<void>;
   toggle_case_sensitive_for_selected: (next_value: boolean) => Promise<void>;
   reorder_selected_entries: (
@@ -682,10 +677,6 @@ export function useGlossaryPageState(): UseGlossaryPageStateResult {
     });
   }, []);
 
-  const clear_all_filters = useCallback((): void => {
-    set_filter_state(create_empty_filter_state());
-  }, []);
-
   const search_entry_relations_from_statistics = useCallback(
     (entry_id: GlossaryEntryId): void => {
       const target_index = entry_index_by_id.get(entry_id);
@@ -824,33 +815,6 @@ export function useGlossaryPageState(): UseGlossaryPageStateResult {
       };
     });
   }, []);
-
-  const select_entry = useCallback(
-    (entry_id: GlossaryEntryId, options: { extend: boolean; range: boolean }): void => {
-      set_active_entry_id(entry_id);
-
-      if (options.range) {
-        set_selected_entry_ids(
-          collect_range_selection(visible_entry_ids, selection_anchor_entry_id, entry_id),
-        );
-        return;
-      }
-
-      if (options.extend) {
-        set_selected_entry_ids((previous_ids) => {
-          return previous_ids.includes(entry_id)
-            ? previous_ids.filter((current_id) => current_id !== entry_id)
-            : [...previous_ids, entry_id];
-        });
-        set_selection_anchor_entry_id(entry_id);
-        return;
-      }
-
-      set_selected_entry_ids([entry_id]);
-      set_selection_anchor_entry_id(entry_id);
-    },
-    [selection_anchor_entry_id, visible_entry_ids],
-  );
 
   const delete_selected_entries = useCallback(async (): Promise<void> => {
     if (readonly || selected_entry_ids.length === 0) {
@@ -1546,11 +1510,9 @@ export function useGlossaryPageState(): UseGlossaryPageStateResult {
       filtered_entries,
       filter_state,
       sort_state,
-      has_active_filters,
       invalid_filter_message: invalid_regex_message,
       readonly,
       drag_disabled,
-      statistics_state,
       statistics_ready,
       statistics_sort_available,
       statistics_badge_by_entry_id,
@@ -1567,7 +1529,6 @@ export function useGlossaryPageState(): UseGlossaryPageStateResult {
       update_filter_regex,
       apply_table_sort_state,
       apply_table_selection,
-      clear_all_filters,
       update_enabled,
       open_create_dialog,
       open_edit_dialog,
@@ -1583,7 +1544,6 @@ export function useGlossaryPageState(): UseGlossaryPageStateResult {
       request_delete_preset,
       set_default_preset,
       cancel_default_preset,
-      select_entry,
       delete_selected_entries,
       toggle_case_sensitive_for_selected,
       reorder_selected_entries,
@@ -1604,7 +1564,6 @@ export function useGlossaryPageState(): UseGlossaryPageStateResult {
     apply_table_sort_state,
     apply_preset,
     cancel_default_preset,
-    clear_all_filters,
     close_confirm_dialog,
     close_preset_input_dialog,
     confirm_pending_action,
@@ -1616,7 +1575,6 @@ export function useGlossaryPageState(): UseGlossaryPageStateResult {
     export_entries_from_picker,
     filter_state,
     filtered_entries,
-    has_active_filters,
     import_entries_from_path,
     import_entries_from_picker,
     invalid_regex_message,
@@ -1636,7 +1594,6 @@ export function useGlossaryPageState(): UseGlossaryPageStateResult {
     readonly,
     save_dialog_entry,
     search_entry_relations_from_statistics,
-    select_entry,
     selected_entry_ids,
     selection_anchor_entry_id,
     set_default_preset,
@@ -1644,7 +1601,6 @@ export function useGlossaryPageState(): UseGlossaryPageStateResult {
     statistics_badge_by_entry_id,
     statistics_sort_available,
     statistics_ready,
-    statistics_state,
     submit_preset_input,
     toggle_case_sensitive_for_selected,
     update_dialog_draft,

@@ -19,7 +19,7 @@ const TEXT_PRESERVE_SCOPE_LABEL_KEY_BY_SCOPE = {
 } satisfies Record<TextPreserveFilterScope, LocaleKey>;
 
 const TEXT_PRESERVE_FILTER_SCOPES: TextPreserveFilterScope[] = ["all", "src", "info"];
-export function TextPreservePage(props: ScreenComponentProps): JSX.Element {
+export function TextPreservePage(_props: ScreenComponentProps): JSX.Element {
   const { t } = useI18n();
   const { push_toast } = useDesktopToast();
   const page_state = useTextPreservePageState();
@@ -48,10 +48,7 @@ export function TextPreservePage(props: ScreenComponentProps): JSX.Element {
     });
 
   return (
-    <div
-      className="text-preserve-page page-shell page-shell--full"
-      data-sidebar-collapsed={String(props.is_sidebar_collapsed)}
-    >
+    <div className="text-preserve-page page-shell page-shell--full">
       <SearchBar
         variant="filter"
         keyword={page_state.filter_state.keyword}

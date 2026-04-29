@@ -23,7 +23,6 @@ type SettingsUpdateRequest = Record<string, unknown>;
 type UseExpertSettingsStateResult = {
   snapshot: ExpertSettingsSnapshot;
   pending_state: ExpertSettingsPendingState;
-  is_refreshing: boolean;
   is_task_busy: boolean;
   refresh_snapshot: () => Promise<void>;
   update_preceding_lines_threshold: (next_value: number) => Promise<void>;
@@ -70,7 +69,6 @@ export function useExpertSettingsState(): UseExpertSettingsStateResult {
   const [pending_state, set_pending_state] = useState<ExpertSettingsPendingState>(() => {
     return create_pending_state();
   });
-  const [is_refreshing, set_is_refreshing] = useState<boolean>(false);
   const snapshot_ref = useRef<ExpertSettingsSnapshot>(snapshot);
   const context_snapshot = useMemo(() => {
     return build_expert_settings_snapshot(settings_snapshot);
@@ -97,8 +95,6 @@ export function useExpertSettingsState(): UseExpertSettingsStateResult {
   );
 
   const refresh_snapshot = useCallback(async (): Promise<void> => {
-    set_is_refreshing(true);
-
     try {
       const next_settings_snapshot = await refresh_settings();
       set_snapshot(build_expert_settings_snapshot(next_settings_snapshot));
@@ -107,8 +103,6 @@ export function useExpertSettingsState(): UseExpertSettingsStateResult {
         "error",
         error instanceof Error ? error.message : t("expert_settings_page.feedback.refresh_failed"),
       );
-    } finally {
-      set_is_refreshing(false);
     }
   }, [push_toast, refresh_settings, t]);
 
@@ -394,7 +388,6 @@ export function useExpertSettingsState(): UseExpertSettingsStateResult {
     return {
       snapshot,
       pending_state,
-      is_refreshing,
       is_task_busy,
       refresh_snapshot,
       update_preceding_lines_threshold,
@@ -408,7 +401,6 @@ export function useExpertSettingsState(): UseExpertSettingsStateResult {
       update_auto_process_prefix_suffix_preserved_text,
     };
   }, [
-    is_refreshing,
     is_task_busy,
     pending_state,
     refresh_snapshot,

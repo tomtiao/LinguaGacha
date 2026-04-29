@@ -21,7 +21,6 @@ export type TextPreserveDialogState = {
   target_entry_id: TextPreserveEntryId | null;
   insert_after_entry_id: TextPreserveEntryId | null;
   draft_entry: TextPreserveEntry;
-  dirty: boolean;
   saving: boolean;
   validation_message: string | null;
 };

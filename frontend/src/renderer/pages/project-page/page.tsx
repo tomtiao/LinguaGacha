@@ -82,7 +82,6 @@ type SelectedSource = {
 
 type MissingRecentProjectState = {
   path: string;
-  name: string;
 } | null;
 
 type ProjectPreviewPayload = {
@@ -386,7 +385,7 @@ function PanelHeader(props: PanelHeaderProps): JSX.Element {
   const Icon = props.icon;
 
   return (
-    <CardHeader className="project-home__panel-header">
+    <CardHeader>
       <div className="project-home__panel-heading">
         <span
           className={cn(
@@ -652,7 +651,7 @@ function wait_for_next_animation_frame(): Promise<void> {
   });
 }
 
-export function ProjectPage(props: ProjectPageProps): JSX.Element {
+export function ProjectPage(_props: ProjectPageProps): JSX.Element {
   const {
     project_warmup_stage,
     settings_snapshot,
@@ -677,8 +676,6 @@ export function ProjectPage(props: ProjectPageProps): JSX.Element {
   const project_loading_toast_id_ref = useRef<string | number | null>(null);
   const recent_projects = settings_snapshot.recent_projects.slice(0, 5);
   const has_recent_projects = recent_projects.length > 0;
-  const create_footer_class_name = "project-home__footer";
-  const open_footer_class_name = "project-home__footer";
 
   function clear_selected_project(): void {
     set_selected_project(null);
@@ -757,7 +754,6 @@ export function ProjectPage(props: ProjectPageProps): JSX.Element {
       ) {
         set_missing_recent_project({
           path: project_path,
-          name: fallback_name,
         });
       } else {
         push_toast(
@@ -1284,10 +1280,7 @@ export function ProjectPage(props: ProjectPageProps): JSX.Element {
         }}
       />
 
-      <div
-        className="project-home page-shell page-shell--full"
-        data-sidebar-collapsed={String(props.is_sidebar_collapsed)}
-      >
+      <div className="project-home page-shell page-shell--full">
         <div className="project-home__layout">
           <Card variant="panel" className="project-home__panel">
             <PanelHeader
@@ -1314,7 +1307,7 @@ export function ProjectPage(props: ProjectPageProps): JSX.Element {
               </section>
             </CardContent>
 
-            <CardFooter className={create_footer_class_name}>
+            <CardFooter className="project-home__footer">
               <ProjectActionButton
                 icon={FilePlus}
                 label={t("project_page.create.action")}
@@ -1344,20 +1337,11 @@ export function ProjectPage(props: ProjectPageProps): JSX.Element {
                   {t("project_page.open.recent_title")}
                 </h3>
 
-                <div
-                  className={cn(
-                    "project-home__recent-content",
-                    selected_project !== null && selected_project.preview !== null
-                      ? "project-home__recent-content--preview"
-                      : null,
-                  )}
-                >
-                  {recent_project_content}
-                </div>
+                <div className="project-home__recent-content">{recent_project_content}</div>
               </section>
             </CardContent>
 
-            <CardFooter className={open_footer_class_name}>
+            <CardFooter className="project-home__footer">
               <ProjectActionButton
                 icon={FileInput}
                 label={t("project_page.open.action")}

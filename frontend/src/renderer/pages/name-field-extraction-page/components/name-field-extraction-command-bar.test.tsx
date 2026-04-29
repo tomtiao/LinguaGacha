@@ -20,7 +20,7 @@ describe("NameFieldExtractionCommandBar", () => {
           row_count={2}
           pending_count={1}
           selected_count={1}
-          run_state={{ extracting: false, translating: false, current_translating_row_id: null }}
+          run_state={{ extracting: false, translating: false }}
           is_running={false}
           glossary_import_locked={false}
           on_extract={async () => {}}

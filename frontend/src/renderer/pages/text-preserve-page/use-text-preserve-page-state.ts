@@ -126,7 +126,6 @@ function create_empty_dialog_state(): TextPreserveDialogState {
     target_entry_id: null,
     insert_after_entry_id: null,
     draft_entry: clone_entry(EMPTY_ENTRY),
-    dirty: false,
     saving: false,
     validation_message: null,
   };
@@ -758,7 +757,6 @@ export function useTextPreservePageState(): UseTextPreservePageStateResult {
       target_entry_id: null,
       insert_after_entry_id,
       draft_entry: clone_entry(EMPTY_ENTRY),
-      dirty: false,
       saving: false,
       validation_message: null,
     });
@@ -786,7 +784,6 @@ export function useTextPreservePageState(): UseTextPreservePageStateResult {
         target_entry_id: entry_id,
         insert_after_entry_id: null,
         draft_entry: clone_entry(target_entry),
-        dirty: false,
         saving: false,
         validation_message: null,
       });
@@ -798,7 +795,6 @@ export function useTextPreservePageState(): UseTextPreservePageStateResult {
     set_dialog_state((previous_state) => {
       return {
         ...previous_state,
-        dirty: true,
         validation_message: null,
         draft_entry: {
           ...previous_state.draft_entry,

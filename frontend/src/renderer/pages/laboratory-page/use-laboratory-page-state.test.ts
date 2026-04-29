@@ -14,7 +14,6 @@ type RuntimeFixture = {
   };
   project_snapshot: {
     loaded: boolean;
-    path: string;
   };
   project_store: {
     getState: () => Record<string, unknown>;
@@ -144,7 +143,6 @@ function create_runtime_fixture(): RuntimeFixture {
     },
     project_snapshot: {
       loaded: true,
-      path: "E:/demo/sample.lg",
     },
     project_store: {
       getState: () => {

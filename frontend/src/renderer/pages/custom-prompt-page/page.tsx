@@ -22,10 +22,7 @@ export function CustomPromptPage(props: CustomPromptPageProps): JSX.Element {
   const { t } = useI18n();
 
   return (
-    <div
-      className="custom-prompt-page page-shell page-shell--full"
-      data-sidebar-collapsed={String(props.is_sidebar_collapsed)}
-    >
+    <div className="custom-prompt-page page-shell page-shell--full">
       <div className="custom-prompt-page__content">
         <Tooltip>
           <TooltipTrigger asChild>

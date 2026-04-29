@@ -42,13 +42,11 @@ import {
   clone_proofreading_filter_options,
   create_empty_proofreading_filter_panel_state,
   create_empty_proofreading_list_view,
-  normalize_proofreading_mutation_payload,
   type ProofreadingClientItem,
   type ProofreadingDialogState,
   type ProofreadingFilterOptions,
   type ProofreadingGlossaryTerm,
   type ProofreadingItem,
-  type ProofreadingMutationPayload,
   type ProofreadingPendingMutation,
   type ProofreadingSearchScope,
   type ProofreadingVisibleItem,
@@ -226,6 +224,12 @@ function build_sort_signature(sort_state: AppTableSortState | null): string {
 }
 
 type ProofreadingFilterValueKeyResolver<T> = (value: T) => string;
+
+type ProofreadingRetranslatePayload = {
+  result?: {
+    changed_item_ids?: Array<number | string>;
+  };
+};
 
 function create_filter_value_key_set<T>(
   values: T[],
@@ -1088,10 +1092,15 @@ export function useProofreadingPageState(): UseProofreadingPageStateResult {
       set_is_mutating(true);
 
       try {
-        const mutation_payload = await api_fetch<ProofreadingMutationPayload>(args.path, args.body);
-        const mutation_result = normalize_proofreading_mutation_payload(mutation_payload);
+        const mutation_payload = await api_fetch<ProofreadingRetranslatePayload>(
+          args.path,
+          args.body,
+        );
+        const changed_item_ids = Array.isArray(mutation_payload.result?.changed_item_ids)
+          ? mutation_payload.result.changed_item_ids
+          : [];
 
-        if (mutation_result.changed_item_ids.length === 0) {
+        if (changed_item_ids.length === 0) {
           if (args.empty_warning_message !== null && args.empty_warning_message !== undefined) {
             push_toast("warning", args.empty_warning_message);
           }
@@ -1103,10 +1112,7 @@ export function useProofreadingPageState(): UseProofreadingPageStateResult {
         }
 
         if (args.success_message_builder !== null && args.success_message_builder !== undefined) {
-          push_toast(
-            "success",
-            args.success_message_builder(mutation_result.changed_item_ids.length),
-          );
+          push_toast("success", args.success_message_builder(changed_item_ids.length));
         }
 
         if (args.close_dialog) {
