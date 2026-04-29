@@ -1,5 +1,8 @@
 from dataclasses import dataclass
+from dataclasses import field
 from typing import Any
+
+from api.Models.Project import ProjectTranslationStats
 
 
 @dataclass(frozen=True)
@@ -29,9 +32,9 @@ class ProjectPreviewPayload:
     file_count: int = 0
     created_at: str = ""
     updated_at: str = ""
-    total_items: int = 0
-    translated_items: int = 0
-    progress: float = 0.0
+    translation_stats: ProjectTranslationStats = field(
+        default_factory=ProjectTranslationStats
+    )
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> "ProjectPreviewPayload":
@@ -43,6 +46,10 @@ class ProjectPreviewPayload:
         else:
             normalized = {}
 
+        translation_stats = ProjectTranslationStats.from_dict(
+            normalized.get("translation_stats"),
+        )
+
         return cls(
             path=str(normalized.get("path", "")),
             name=str(normalized.get("name", "")),
@@ -51,9 +58,7 @@ class ProjectPreviewPayload:
             file_count=int(normalized.get("file_count", 0) or 0),
             created_at=str(normalized.get("created_at", "")),
             updated_at=str(normalized.get("updated_at", "")),
-            total_items=int(normalized.get("total_items", 0) or 0),
-            translated_items=int(normalized.get("translated_items", 0) or 0),
-            progress=float(normalized.get("progress", 0.0) or 0.0),
+            translation_stats=translation_stats,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -67,7 +72,5 @@ class ProjectPreviewPayload:
             "file_count": self.file_count,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
-            "total_items": self.total_items,
-            "translated_items": self.translated_items,
-            "progress": self.progress,
+            "translation_stats": self.translation_stats.to_dict(),
         }

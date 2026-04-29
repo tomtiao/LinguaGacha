@@ -150,50 +150,6 @@
   max-width: 100%;
 }
 
-.workbench-page__segmented-progress {
-  display: flex;
-  width: 100%;
-  height: 5px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: var(--muted);
-}
-
-.workbench-page__segmented-progress-segment {
-  height: 100%;
-  flex: 0 0 auto;
-}
-
-.workbench-page__segmented-progress-segment--skipped {
-  background: var(--primary);
-}
-
-.workbench-page__segmented-progress-segment--failed {
-  background: var(--ui-failure);
-}
-
-.workbench-page__segmented-progress-segment--completed {
-  background: var(--ui-success);
-}
-
-.workbench-page__segmented-progress-segment--pending {
-  background: color-mix(in srgb, var(--muted-foreground) 32%, var(--muted) 68%);
-}
-
-.workbench-page__segmented-progress-tooltip {
-  display: grid;
-  gap: 4px;
-  min-width: 128px;
-}
-
-.workbench-page__segmented-progress-tooltip-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-
 .workbench-page__table [data-slot="table-cell"] {
   color: color-mix(in srgb, var(--foreground) 92%, var(--muted-foreground) 8%);
 }

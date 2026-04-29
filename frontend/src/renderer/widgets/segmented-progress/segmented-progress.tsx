@@ -1,7 +1,16 @@
-import type { WorkbenchStats } from "@/pages/workbench-page/types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shadcn/tooltip";
+import "@/widgets/segmented-progress/segmented-progress.css";
 
-type WorkbenchSegmentedProgressLabels = {
+export type SegmentedProgressStats = {
+  total_items: number;
+  completed_count: number;
+  failed_count: number;
+  pending_count: number;
+  skipped_count: number;
+  completion_percent: number;
+};
+
+export type SegmentedProgressLabels = {
   skipped: string;
   failed: string;
   completed: string;
@@ -9,20 +18,20 @@ type WorkbenchSegmentedProgressLabels = {
   total: string;
 };
 
-type WorkbenchSegmentedProgressProps = {
-  stats: WorkbenchStats;
-  labels: WorkbenchSegmentedProgressLabels;
+type SegmentedProgressProps = {
+  stats: SegmentedProgressStats;
+  labels: SegmentedProgressLabels;
 };
 
-type WorkbenchProgressSegment = {
+type ProgressSegment = {
   key: "skipped" | "failed" | "completed" | "pending";
   value: number;
   label: string;
 };
 
 function format_progress_label(args: {
-  labels: WorkbenchSegmentedProgressLabels;
-  stats: WorkbenchStats;
+  labels: SegmentedProgressLabels;
+  stats: SegmentedProgressStats;
 }): string {
   return [
     `${args.labels.skipped} - ${args.stats.skipped_count}`,
@@ -33,8 +42,8 @@ function format_progress_label(args: {
   ].join(" / ");
 }
 
-export function WorkbenchSegmentedProgress(props: WorkbenchSegmentedProgressProps): JSX.Element {
-  const segments: WorkbenchProgressSegment[] = [
+export function SegmentedProgress(props: SegmentedProgressProps): JSX.Element {
+  const segments: ProgressSegment[] = [
     {
       key: "skipped",
       value: props.stats.skipped_count,
@@ -65,7 +74,7 @@ export function WorkbenchSegmentedProgress(props: WorkbenchSegmentedProgressProp
     <Tooltip>
       <TooltipTrigger asChild>
         <div
-          className="workbench-page__segmented-progress"
+          className="segmented-progress"
           role="progressbar"
           aria-label={progress_label}
           aria-valuemin={0}
@@ -79,7 +88,7 @@ export function WorkbenchSegmentedProgress(props: WorkbenchSegmentedProgressProp
             return segment.value > 0 ? (
               <span
                 key={segment.key}
-                className={`workbench-page__segmented-progress-segment workbench-page__segmented-progress-segment--${segment.key}`}
+                className={`segmented-progress__segment segmented-progress__segment--${segment.key}`}
                 style={{ width: `${width_percent}%` }}
                 aria-hidden="true"
               />
@@ -88,10 +97,10 @@ export function WorkbenchSegmentedProgress(props: WorkbenchSegmentedProgressProp
         </div>
       </TooltipTrigger>
       <TooltipContent side="top" sideOffset={8}>
-        <div className="workbench-page__segmented-progress-tooltip">
+        <div className="segmented-progress__tooltip">
           {segments.map((segment) => {
             return (
-              <span key={segment.key} className="workbench-page__segmented-progress-tooltip-row">
+              <span key={segment.key} className="segmented-progress__tooltip-row">
                 {segment.label} - {segment.value.toLocaleString()}
               </span>
             );

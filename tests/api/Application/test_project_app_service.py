@@ -321,9 +321,14 @@ def test_get_project_preview_returns_preview_payload(
         "file_count": 1,
         "created_at": "",
         "updated_at": "",
-        "total_items": 8,
-        "translated_items": 3,
-        "progress": 0.375,
+        "translation_stats": {
+            "total_items": 8,
+            "completed_count": 3,
+            "failed_count": 1,
+            "pending_count": 3,
+            "skipped_count": 1,
+            "completion_percent": 50.0,
+        },
     }
 
 

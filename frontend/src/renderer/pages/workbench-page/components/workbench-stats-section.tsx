@@ -13,15 +13,15 @@ export function WorkbenchStatsSection(props: WorkbenchStatsSectionProps): JSX.El
   const completed_title =
     props.stats_mode === "analysis"
       ? t("workbench_page.stats.analysis_completed")
-      : t("workbench_page.stats.translated");
+      : t("workbench_page.stats.translation_completed");
   const failed_title =
     props.stats_mode === "analysis"
       ? t("workbench_page.stats.analysis_failed")
-      : t("workbench_page.stats.error_count");
+      : t("workbench_page.stats.translation_failed");
   const pending_title =
     props.stats_mode === "analysis"
       ? t("workbench_page.stats.analysis_pending")
-      : t("workbench_page.stats.untranslated");
+      : t("workbench_page.stats.translation_pending");
   const skipped_title =
     props.stats_mode === "analysis"
       ? t("workbench_page.stats.analysis_skipped")

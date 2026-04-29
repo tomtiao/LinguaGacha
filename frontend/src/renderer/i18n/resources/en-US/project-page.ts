@@ -48,6 +48,7 @@ export const en_us_project_page = {
     updated_at: "Last Updated",
     progress: "Progress",
     translated: "Translated:",
+    skipped: "No Translation Needed:",
     total: "Total:",
     rows_unit: "",
   },

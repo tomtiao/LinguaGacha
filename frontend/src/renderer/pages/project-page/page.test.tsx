@@ -65,6 +65,20 @@ const I18N_TEXT_BY_KEY: Record<string, string> = {
   "project_page.open.recent_title": "最近打开",
   "project_page.open.subtitle": "加载现有的 .lg 工程文件以继承翻译进度、翻译规则继续工作。",
   "project_page.open.title": "打开工程",
+  "project_page.preview.created_at": "创建时间",
+  "project_page.preview.file_count": "文件数量",
+  "project_page.preview.progress": "翻译进度",
+  "project_page.preview.project_name": "项目名称",
+  "project_page.preview.rows_unit": "行",
+  "project_page.preview.skipped": "无需翻译:",
+  "project_page.preview.total": "总计：",
+  "project_page.preview.translated": "已翻译：",
+  "project_page.preview.updated_at": "最后修改",
+  "workbench_page.stats.total_lines": "总计",
+  "workbench_page.stats.translation_completed": "翻译成功",
+  "workbench_page.stats.translation_failed": "翻译失败",
+  "workbench_page.stats.translation_pending": "等待翻译",
+  "workbench_page.stats.translation_skipped": "无需翻译",
 };
 
 vi.mock("@/i18n", () => {
@@ -153,12 +167,6 @@ vi.mock("@/shadcn/card", () => {
     CardFooter: (props: { children: ReactNode }) => <footer>{props.children}</footer>,
     CardHeader: (props: { children: ReactNode }) => <header>{props.children}</header>,
     CardTitle: (props: { children: ReactNode }) => <h2>{props.children}</h2>,
-  };
-});
-
-vi.mock("@/shadcn/progress", () => {
-  return {
-    Progress: () => <div />,
   };
 });
 
@@ -376,5 +384,47 @@ describe("ProjectPage", () => {
       "info",
       expect.stringContaining("已自动加载默认预设"),
     );
+  });
+
+  it("选中最近工程后使用四段复合进度条展示预览", async () => {
+    desktop_runtime_fixture.current = create_desktop_runtime_fixture({
+      recent_projects: [{ path: "E:\\Projects\\demo.lg", name: "demo" }],
+    });
+    api_fetch_mock.mockImplementation(async (path: string) => {
+      if (path === "/api/project/preview") {
+        return {
+          preview: {
+            path: "E:\\Projects\\demo.lg",
+            name: "demo",
+            file_count: 1,
+            created_at: "2026-04-27T16:50:42",
+            updated_at: "2026-04-28T18:35:42",
+            translation_stats: {
+              total_items: 8,
+              completed_count: 3,
+              failed_count: 1,
+              pending_count: 3,
+              skipped_count: 1,
+              completion_percent: 50,
+            },
+          },
+        };
+      }
+
+      return {};
+    });
+    await mount_page();
+
+    await act(async () => {
+      get_button_by_text(container as HTMLElement, "demo").click();
+      await flush_async_updates();
+    });
+
+    expect(container?.textContent).toContain("50.00%");
+    expect(container?.textContent).toContain("已翻译： 3 行无需翻译: 1 行总计： 8 行");
+    expect(container?.querySelector("[role='progressbar']")?.getAttribute("aria-label")).toBe(
+      "无需翻译 - 1 / 翻译失败 - 1 / 翻译成功 - 3 / 等待翻译 - 3 / 总计 - 8",
+    );
+    expect(container?.querySelectorAll(".segmented-progress__segment")).toHaveLength(4);
   });
 });

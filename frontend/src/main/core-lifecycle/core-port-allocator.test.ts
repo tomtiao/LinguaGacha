@@ -20,6 +20,15 @@ async function listen_on_port(port: number): Promise<net.Server> {
   });
 }
 
+function read_listening_port(server: net.Server): number {
+  const address = server.address();
+  if (address === null || typeof address === "string") {
+    throw new Error("测试服务器没有可读取的 TCP 端口。");
+  }
+
+  return address.port;
+}
+
 async function close_server(server: net.Server): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     server.close((error) => {
@@ -30,6 +39,13 @@ async function close_server(server: net.Server): Promise<void> {
       }
     });
   });
+}
+
+async function reserve_then_release_port(): Promise<number> {
+  const server = await listen_on_port(0);
+  const port = read_listening_port(server);
+  await close_server(server);
+  return port;
 }
 
 describe("core-port-allocator", () => {
@@ -59,12 +75,12 @@ describe("core-port-allocator", () => {
   });
 
   it("候选端口被占用时继续尝试后续端口", async () => {
-    const occupied_port = await allocate_core_api_port();
-    let fallback_port = await allocate_core_api_port();
+    const occupied_server = await listen_on_port(0);
+    const occupied_port = read_listening_port(occupied_server);
+    let fallback_port = await reserve_then_release_port();
     while (fallback_port === occupied_port) {
-      fallback_port = await allocate_core_api_port();
+      fallback_port = await reserve_then_release_port();
     }
-    const occupied_server = await listen_on_port(occupied_port);
 
     try {
       const picked_ports = [occupied_port, fallback_port];
@@ -79,8 +95,8 @@ describe("core-port-allocator", () => {
   });
 
   it("候选次数耗尽时给出清晰错误", async () => {
-    const occupied_port = await allocate_core_api_port();
-    const occupied_server = await listen_on_port(occupied_port);
+    const occupied_server = await listen_on_port(0);
+    const occupied_port = read_listening_port(occupied_server);
 
     try {
       await expect(
