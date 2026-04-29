@@ -60,6 +60,12 @@ def test_sanitize_opf_and_css(config: Config) -> None:
     assert "writing-mode" not in writer.sanitize_css("p{writing-mode:vertical-rl;}")
 
 
+def test_sanitize_xml_text_removes_illegal_xml_control_chars(config: Config) -> None:
+    writer = EPUBAstWriter(config)
+
+    assert writer.sanitize_xml_text("A\x08\t\n\r中文") == "A\t\n\r中文"
+
+
 def test_parse_doc_raises_value_error_on_invalid_opf(
     config: Config,
     monkeypatch: pytest.MonkeyPatch,
@@ -191,6 +197,23 @@ def test_apply_items_to_tree_replaces_text_and_inserts_bilingual_block(
     assert ps[1].text == "译文"
     assert ps[0].text == "原文"
     assert "opacity:0.50;" in str(ps[0].get("style"))
+
+
+def test_apply_items_to_tree_sanitizes_illegal_xml_text(config: Config) -> None:
+    writer = EPUBAstWriter(config)
+    item, root = build_item_for_text_node(config, "src", "译\x08文")
+
+    applied, skipped = writer.apply_items_to_tree(
+        root=root,
+        doc_path="text/ch1.xhtml",
+        items=[item],
+        bilingual=False,
+    )
+
+    p = root.xpath(".//*[local-name()='p']")[0]
+    assert applied == 1
+    assert skipped == 0
+    assert p.text == "译文"
 
 
 def test_apply_items_to_tree_skips_on_digest_mismatch(config: Config) -> None:
@@ -1078,6 +1101,74 @@ def test_build_epub_applies_translation_and_sanitizes_assets(
     assert "writing-mode" not in css
     assert "page-progression-direction" not in opf
     assert binary == b"\x89PNG\r\n\x1a\n"
+
+
+def test_build_epub_sanitizes_one_bad_item_without_reverting_document(
+    config: Config,
+    fs,
+) -> None:
+    del fs
+    writer = EPUBAstWriter(config)
+    ast = EPUBAst(config)
+    out_path = Path("/workspace/out/book-illegal-char.epub")
+    chapter = (
+        b"<?xml version='1.0'?><html><body><p>first</p><p>second</p></body></html>"
+    )
+    root = etree.fromstring(chapter)
+    first_p, second_p = root.xpath(".//*[local-name()='p']")
+    first_path = ast.build_elem_path(root, first_p)
+    second_path = ast.build_elem_path(root, second_p)
+    epub_bytes = build_zip_with_files({"text/ch1.xhtml": chapter})
+    items = [
+        Item.from_dict(
+            {
+                "src": "first",
+                "dst": "第一\x08条",
+                "row": 1,
+                "file_type": Item.FileType.EPUB,
+                "extra_field": {
+                    "epub": {
+                        "doc_path": "text/ch1.xhtml",
+                        "parts": [{"slot": "text", "path": first_path}],
+                        "block_path": first_path,
+                        "src_digest": ast.sha1_hex_with_null_separator(["first"]),
+                    }
+                },
+            }
+        ),
+        Item.from_dict(
+            {
+                "src": "second",
+                "dst": "第二条",
+                "row": 2,
+                "file_type": Item.FileType.EPUB,
+                "extra_field": {
+                    "epub": {
+                        "doc_path": "text/ch1.xhtml",
+                        "parts": [{"slot": "text", "path": second_path}],
+                        "block_path": second_path,
+                        "src_digest": ast.sha1_hex_with_null_separator(["second"]),
+                    }
+                },
+            }
+        ),
+    ]
+
+    writer.build_epub(
+        original_epub_bytes=epub_bytes,
+        items=items,
+        out_path=str(out_path),
+        bilingual=False,
+    )
+
+    with zipfile.ZipFile(out_path, "r") as zf:
+        chapter_text = zf.read("text/ch1.xhtml").decode("utf-8")
+
+    assert "\x08" not in chapter_text
+    assert "第一条" in chapter_text
+    assert "第二条" in chapter_text
+    assert "first" not in chapter_text
+    assert "second" not in chapter_text
 
 
 def test_build_epub_applies_translation_to_xhtm_document(
