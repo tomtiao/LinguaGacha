@@ -6,7 +6,7 @@
     var(--titlebar-safe-area-end, 0px);
   align-items: stretch;
   height: var(--titlebar-height, 40px);
-  background: transparent;
+  background: var(--ui-titlebar-surface);
 }
 
 .topbar__safe-area,
