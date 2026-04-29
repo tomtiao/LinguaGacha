@@ -6,6 +6,7 @@ from api.Models.Model import ModelThinkingSnapshot
 from api.Models.Model import ModelThresholdSnapshot
 from api.Models.Project import ProjectPreview
 from api.Models.Project import ProjectSnapshot
+from api.Models.Project import ProjectTranslationStats
 from api.Models.ProjectRuntime import ProjectMutationAck
 from api.Models.Proofreading import ProofreadingMutationResult
 from api.Models.QualityRule import QualityRuleEntry
@@ -25,6 +26,7 @@ __all__ = [
     "ProjectMutationAck",
     "ProjectPreview",
     "ProjectSnapshot",
+    "ProjectTranslationStats",
     "ProofreadingMutationResult",
     "QualityRuleEntry",
     "QualityRuleSnapshot",

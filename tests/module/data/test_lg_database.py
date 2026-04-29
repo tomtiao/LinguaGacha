@@ -200,13 +200,16 @@ def test_get_rules_logs_and_returns_empty_when_first_row_is_invalid_json(
     logger.warning.assert_called_once()
 
 
-def test_get_project_summary_uses_translation_extras(database: LGDatabase) -> None:
+def test_get_project_summary_uses_item_status_for_translation_stats(
+    database: LGDatabase,
+) -> None:
     database.set_meta("name", "MyProject")
     database.set_meta("source_language", "JP")
     database.set_meta("target_language", "ZH")
-    database.set_meta("translation_extras", {"line": 4, "total_line": 5})
-    database.set_item({"src": "1"})
-    database.set_item({"src": "2"})
+    database.set_item({"src": "1", "status": "PROCESSED"})
+    database.set_item({"src": "2", "status": "ERROR"})
+    database.set_item({"src": "3", "status": "NONE"})
+    database.set_item({"src": "4", "status": "RULE_SKIPPED"})
     database.add_asset("a.txt", b"1", 1)
 
     summary = database.get_project_summary()
@@ -215,9 +218,14 @@ def test_get_project_summary_uses_translation_extras(database: LGDatabase) -> No
     assert summary["source_language"] == "JP"
     assert summary["target_language"] == "ZH"
     assert summary["file_count"] == 1
-    assert summary["translated_items"] == 4
-    assert summary["total_items"] == 5
-    assert summary["progress"] == 0.8
+    assert summary["translation_stats"] == {
+        "total_items": 4,
+        "completed_count": 1,
+        "failed_count": 1,
+        "pending_count": 1,
+        "skipped_count": 1,
+        "completion_percent": 50.0,
+    }
 
 
 def test_get_project_summary_falls_back_to_item_count_when_extras_missing_or_invalid(
@@ -228,22 +236,27 @@ def test_get_project_summary_falls_back_to_item_count_when_extras_missing_or_inv
     database.set_item({"src": "2"})
 
     summary = database.get_project_summary()
-    assert summary["total_items"] == 2
-    assert summary["translated_items"] == 0
-    assert summary["progress"] == 0.0
+    assert summary["translation_stats"] == {
+        "total_items": 2,
+        "completed_count": 0,
+        "failed_count": 0,
+        "pending_count": 2,
+        "skipped_count": 0,
+        "completion_percent": 0.0,
+    }
 
 
-def test_get_project_summary_uses_item_count_when_total_line_is_zero(
+def test_get_project_summary_counts_skipped_items_as_complete_for_progress(
     database: LGDatabase,
 ) -> None:
-    database.set_meta("translation_extras", {"line": 4, "total_line": 0})
-    for i in range(10):
-        database.set_item({"src": str(i)})
+    database.set_item({"src": "1", "status": "PROCESSED"})
+    database.set_item({"src": "2", "status": "RULE_SKIPPED"})
+    database.set_item({"src": "3", "status": "LANGUAGE_SKIPPED"})
+    database.set_item({"src": "4", "status": "NONE"})
 
     summary = database.get_project_summary()
-    assert summary["translated_items"] == 4
-    assert summary["total_items"] == 10
-    assert summary["progress"] == 0.4
+    assert summary["translation_stats"]["skipped_count"] == 2
+    assert summary["translation_stats"]["completion_percent"] == 75.0
 
 
 def test_get_project_summary_returns_zero_progress_when_no_items(
@@ -252,8 +265,14 @@ def test_get_project_summary_returns_zero_progress_when_no_items(
     database.set_meta("translation_extras", {"line": 1, "total_line": 0})
 
     summary = database.get_project_summary()
-    assert summary["total_items"] == 0
-    assert summary["progress"] == 0.0
+    assert summary["translation_stats"] == {
+        "total_items": 0,
+        "completed_count": 0,
+        "failed_count": 0,
+        "pending_count": 0,
+        "skipped_count": 0,
+        "completion_percent": 0.0,
+    }
 
 
 def test_create_creates_persistent_db_file_and_sets_base_meta(fs) -> None:

@@ -110,6 +110,11 @@ def test_project_api_client_get_project_preview_returns_preview(
     assert result.path == project_path
     assert result.source_language == "JA"
     assert result.target_language == "ZH"
-    assert result.total_items == 8
-    assert result.translated_items == 3
-    assert result.progress == 0.375
+    assert result.translation_stats.to_dict() == {
+        "total_items": 8,
+        "completed_count": 3,
+        "failed_count": 1,
+        "pending_count": 3,
+        "skipped_count": 1,
+        "completion_percent": 50.0,
+    }

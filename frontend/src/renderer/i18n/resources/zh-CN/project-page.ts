@@ -44,6 +44,7 @@ export const zh_cn_project_page = {
     updated_at: "最后修改",
     progress: "翻译进度",
     translated: "已翻译:",
+    skipped: "无需翻译:",
     total: "总计:",
     rows_unit: "行",
   },

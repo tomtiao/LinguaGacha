@@ -1207,23 +1207,45 @@ class LGDatabase(Base):
             }
 
             file_count = conn.execute("SELECT COUNT(*) FROM assets").fetchone()[0]
+            item_rows = conn.execute("SELECT data FROM items").fetchall()
+            total_items = len(item_rows)
+            completed_count = 0
+            failed_count = 0
+            pending_count = 0
+            skipped_count = 0
 
-            extras = meta.get("translation_extras", {})
-            if isinstance(extras, dict) and "line" in extras and "total_line" in extras:
-                translated_items = extras["line"]
-                total_items = extras["total_line"]
-                if total_items == 0:
-                    total_items = (
-                        conn.execute("SELECT COUNT(*) FROM items").fetchone()[0] or 0
-                    )
-            else:
-                total_items = conn.execute("SELECT COUNT(*) FROM items").fetchone()[0]
-                translated_items = 0
+            for row in item_rows:
+                try:
+                    item_data = JSONTool.loads(row["data"])
+                except Exception:
+                    item_data = {}
+                status = (
+                    item_data.get("status", Base.ProjectStatus.NONE.value)
+                    if isinstance(item_data, dict)
+                    else Base.ProjectStatus.NONE.value
+                )
+                if status == Base.ProjectStatus.PROCESSED.value:
+                    completed_count += 1
+                elif status == Base.ProjectStatus.ERROR.value:
+                    failed_count += 1
+                elif status == Base.ProjectStatus.NONE.value:
+                    pending_count += 1
+                else:
+                    skipped_count += 1
 
-            if total_items == 0:
-                progress = 0.0
-            else:
-                progress = min(1.0, translated_items / total_items)
+            completion_percent = (
+                ((completed_count + skipped_count) / total_items) * 100
+                if total_items > 0
+                else 0.0
+            )
+            translation_stats = {
+                "total_items": total_items,
+                "completed_count": completed_count,
+                "failed_count": failed_count,
+                "pending_count": pending_count,
+                "skipped_count": skipped_count,
+                "completion_percent": completion_percent,
+            }
 
             return {
                 "name": meta.get("name", Path(self.db_path).stem),
@@ -1232,7 +1254,5 @@ class LGDatabase(Base):
                 "created_at": meta.get("created_at", ""),
                 "updated_at": meta.get("updated_at", ""),
                 "file_count": file_count,
-                "total_items": total_items,
-                "translated_items": translated_items,
-                "progress": progress,
+                "translation_stats": translation_stats,
             }

@@ -28,9 +28,14 @@ def test_project_preview_from_dict_models_summary_fields() -> None:
             "source_language": "JA",
             "target_language": "ZH",
             "file_count": 4,
-            "total_items": 12,
-            "translated_items": 5,
-            "progress": 0.25,
+            "translation_stats": {
+                "total_items": 12,
+                "completed_count": 5,
+                "failed_count": 1,
+                "pending_count": 4,
+                "skipped_count": 2,
+                "completion_percent": 58.33,
+            },
         }
     )
 
@@ -39,9 +44,12 @@ def test_project_preview_from_dict_models_summary_fields() -> None:
     assert preview.source_language == "JA"
     assert preview.target_language == "ZH"
     assert preview.file_count == 4
-    assert preview.total_items == 12
-    assert preview.translated_items == 5
-    assert preview.progress == 0.25
+    assert preview.translation_stats.total_items == 12
+    assert preview.translation_stats.completed_count == 5
+    assert preview.translation_stats.failed_count == 1
+    assert preview.translation_stats.pending_count == 4
+    assert preview.translation_stats.skipped_count == 2
+    assert preview.translation_stats.completion_percent == 58.33
 
 
 def test_project_preview_to_dict_returns_explicit_modeled_fields() -> None:
@@ -54,9 +62,14 @@ def test_project_preview_to_dict_returns_explicit_modeled_fields() -> None:
             "file_count": 4,
             "created_at": "2026-03-24T12:00:00",
             "updated_at": "2026-03-24T12:30:00",
-            "total_items": 12,
-            "translated_items": 5,
-            "progress": 0.25,
+            "translation_stats": {
+                "total_items": 12,
+                "completed_count": 5,
+                "failed_count": 1,
+                "pending_count": 4,
+                "skipped_count": 2,
+                "completion_percent": 58.33,
+            },
             "legacy_extra": "ignored",
         }
     )
@@ -69,14 +82,20 @@ def test_project_preview_to_dict_returns_explicit_modeled_fields() -> None:
         "file_count": 4,
         "created_at": "2026-03-24T12:00:00",
         "updated_at": "2026-03-24T12:30:00",
-        "total_items": 12,
-        "translated_items": 5,
-        "progress": 0.25,
+        "translation_stats": {
+            "total_items": 12,
+            "completed_count": 5,
+            "failed_count": 1,
+            "pending_count": 4,
+            "skipped_count": 2,
+            "completion_percent": 58.33,
+        },
     }
 
 
-def test_project_preview_from_dict_defaults_missing_progress_to_zero() -> None:
+def test_project_preview_from_dict_defaults_missing_stats_to_zero() -> None:
     preview = ProjectPreview.from_dict({"name": "Draft"})
 
     assert preview.name == "Draft"
-    assert preview.progress == 0.0
+    assert preview.translation_stats.total_items == 0
+    assert preview.translation_stats.completion_percent == 0.0

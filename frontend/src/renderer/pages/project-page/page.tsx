@@ -1,4 +1,13 @@
-import { BadgeAlert, File, FolderOpen, SquareMousePointer, X, type LucideIcon } from "lucide-react";
+import {
+  BadgeAlert,
+  File,
+  FileInput,
+  FilePlus,
+  FolderOpen,
+  SquareMousePointer,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import {
   forwardRef,
   type ComponentProps,
@@ -32,12 +41,15 @@ import {
   AppContextMenuItem,
   AppContextMenuTrigger,
 } from "@/widgets/app-context-menu/app-context-menu";
-import { Progress } from "@/shadcn/progress";
 import { Spinner } from "@/shadcn/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shadcn/tooltip";
 import { type LocaleKey, useI18n } from "@/i18n";
 import { has_path_drop_payload, resolve_dropped_path } from "@/lib/file-drop";
 import { cn } from "@/lib/utils";
+import {
+  SegmentedProgress,
+  type SegmentedProgressStats,
+} from "@/widgets/segmented-progress/segmented-progress";
 import "@/pages/project-page/project-page.css";
 import { PROJECT_FORMAT_SUPPORT_ITEMS } from "@/pages/project-page/support-formats";
 import { DesktopApiError, api_fetch } from "@/app/desktop-api";
@@ -53,8 +65,7 @@ type ProjectPreviewStats = {
   created_at: string;
   last_updated_at: string;
   progress_percent: number;
-  translated_items: number;
-  total_items: number;
+  translation_stats: SegmentedProgressStats;
 };
 
 type SelectedProject = {
@@ -81,9 +92,7 @@ type ProjectPreviewPayload = {
     file_count?: number;
     created_at?: string;
     updated_at?: string;
-    total_items?: number;
-    translated_items?: number;
-    progress?: number;
+    translation_stats?: Partial<SegmentedProgressStats>;
   };
 };
 
@@ -123,9 +132,10 @@ type SettingsPayload = {
 };
 
 type PanelHeaderProps = {
-  accent_class_name: string;
+  icon: LucideIcon;
   title: string;
   subtitle: string;
+  tone: "source" | "project";
 };
 
 type DropZoneCardProps = Omit<
@@ -266,6 +276,24 @@ function append_optional_unit_label(text: string, unit_label: string): string {
   }
 }
 
+function normalize_count(value: unknown): number {
+  const numeric_value = Number(value ?? 0);
+  if (!Number.isFinite(numeric_value)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.trunc(numeric_value));
+}
+
+function normalize_percent(value: unknown): number {
+  const numeric_value = Number(value ?? 0);
+  if (!Number.isFinite(numeric_value)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, numeric_value));
+}
+
 function normalize_project_snapshot(payload: ProjectSnapshotPayload): ProjectSnapshot {
   return {
     path: String(payload.project?.path ?? ""),
@@ -287,13 +315,44 @@ function collect_loaded_default_preset_names(
   });
 }
 
+function normalize_project_preview_translation_stats(
+  preview: NonNullable<ProjectPreviewPayload["preview"]>,
+): SegmentedProgressStats {
+  const raw_stats = preview.translation_stats;
+  const total_items = normalize_count(raw_stats?.total_items);
+  const completed_count = normalize_count(raw_stats?.completed_count);
+  const failed_count = normalize_count(raw_stats?.failed_count);
+  const skipped_count = normalize_count(raw_stats?.skipped_count);
+  const pending_count = normalize_count(
+    raw_stats?.pending_count ?? total_items - completed_count - failed_count - skipped_count,
+  );
+  const computed_percent =
+    total_items > 0 ? ((completed_count + skipped_count) / total_items) * 100 : 0;
+  const raw_completion_percent = raw_stats?.completion_percent;
+  let completion_percent = normalize_percent(raw_completion_percent);
+
+  if (completion_percent === 0 && computed_percent > 0) {
+    completion_percent = normalize_percent(computed_percent);
+  }
+
+  return {
+    total_items,
+    completed_count,
+    failed_count,
+    pending_count,
+    skipped_count,
+    completion_percent,
+  };
+}
+
 function normalize_project_preview(
   project_path: string,
   fallback_name: string,
   payload: ProjectPreviewPayload,
 ): SelectedProject {
-  const preview = payload.preview ?? {};
+  const preview: NonNullable<ProjectPreviewPayload["preview"]> = payload.preview ?? {};
   const resolved_name = String(preview.name ?? fallback_name);
+  const translation_stats = normalize_project_preview_translation_stats(preview);
 
   return {
     path: project_path,
@@ -302,9 +361,8 @@ function normalize_project_preview(
       file_count: Number(preview.file_count ?? 0),
       created_at: String(preview.created_at ?? ""),
       last_updated_at: String(preview.updated_at ?? ""),
-      progress_percent: Math.round(Number(preview.progress ?? 0) * 100),
-      translated_items: Number(preview.translated_items ?? 0),
-      total_items: Number(preview.total_items ?? 0),
+      progress_percent: translation_stats.completion_percent,
+      translation_stats,
     },
   };
 }
@@ -325,18 +383,25 @@ function open_context_menu_at_click_position(event: MouseEvent<HTMLButtonElement
 }
 
 function PanelHeader(props: PanelHeaderProps): JSX.Element {
+  const Icon = props.icon;
+
   return (
-    <CardHeader>
-      <div className="flex items-start gap-3">
+    <CardHeader className="project-home__panel-header">
+      <div className="project-home__panel-heading">
         <span
-          className={cn("project-home__section-rail", props.accent_class_name)}
+          className={cn(
+            "project-home__panel-mark",
+            props.tone === "source"
+              ? "project-home__panel-mark--source"
+              : "project-home__panel-mark--project",
+          )}
           aria-hidden="true"
-        />
-        <div className="space-y-2">
-          <CardTitle className="text-[clamp(25.92px,23.68px+0.34vw,30.72px)] leading-[1.08] tracking-[-0.028em]">
-            {props.title}
-          </CardTitle>
-          <CardDescription className="max-w-[520px] text-[12.8px] leading-[1.45] text-[color:var(--project-home-subtitle)]">
+        >
+          <Icon className="size-[17px] stroke-[1.9]" />
+        </span>
+        <div className="project-home__panel-copy">
+          <CardTitle className="project-home__panel-title">{props.title}</CardTitle>
+          <CardDescription className="project-home__panel-description">
             {props.subtitle}
           </CardDescription>
         </div>
@@ -361,7 +426,7 @@ const DropZoneCard = forwardRef<HTMLButtonElement, DropZoneCardProps>(
       ...button_props
     } = props;
     // 让创建与打开入口保留不同图标语义，避免 props 只传不消费导致 lint 失败。
-    const Icon = icon === "source" ? File : FolderOpen;
+    const Icon = icon === "source" ? FilePlus : FileInput;
 
     return (
       <button
@@ -370,7 +435,6 @@ const DropZoneCard = forwardRef<HTMLButtonElement, DropZoneCardProps>(
         className={cn(
           "project-home__dropzone flex w-full flex-col items-center justify-center text-center",
           tone === "source" ? "project-home__dropzone--source" : "project-home__dropzone--project",
-          "h-[145px] px-5 py-4",
           className,
         )}
         type="button"
@@ -384,9 +448,7 @@ const DropZoneCard = forwardRef<HTMLButtonElement, DropZoneCardProps>(
         <span className="project-home__dropzone-icon">
           <Icon className="size-11 stroke-[1.8]" />
         </span>
-        <p className="mt-2.5 text-[15.36px] tracking-[-0.018em] font-medium text-foreground">
-          {title}
-        </p>
+        <p className="project-home__dropzone-title">{title}</p>
       </button>
     );
   },
@@ -394,16 +456,10 @@ const DropZoneCard = forwardRef<HTMLButtonElement, DropZoneCardProps>(
 
 function FormatSupportCard(props: FormatSupportCardProps): JSX.Element {
   return (
-    <Card className="project-home__format-card">
-      <CardContent className="space-y-1">
-        <h3 className="text-[12.48px] leading-[1.35] tracking-[-0.015em] font-medium text-foreground">
-          {props.title}
-        </h3>
-        <p className="text-[11.52px] leading-[1.35] text-[color:var(--project-home-muted)]">
-          {props.extensions}
-        </p>
-      </CardContent>
-    </Card>
+    <div className="project-home__format-item">
+      <h3 className="project-home__format-title">{props.title}</h3>
+      <p className="project-home__format-extensions">{props.extensions}</p>
+    </div>
   );
 }
 
@@ -422,12 +478,8 @@ function RecentProjectRow(props: RecentProjectRowProps): JSX.Element {
         <Tooltip>
           <TooltipTrigger asChild>
             <span className="min-w-0 flex-1 text-left">
-              <span className="block truncate text-[12.16px] tracking-[-0.012em] font-medium text-foreground">
-                {props.name}
-              </span>
-              <span className="mt-0.5 block truncate text-[10.56px] text-[color:var(--project-home-muted)]">
-                {props.path}
-              </span>
+              <span className="project-home__recent-name">{props.name}</span>
+              <span className="project-home__recent-path">{props.path}</span>
             </span>
           </TooltipTrigger>
           <TooltipContent
@@ -473,11 +525,15 @@ function ProjectPreviewPanel(props: ProjectPreviewPanelProps): JSX.Element {
   }
   const rows_unit = t("project_page.preview.rows_unit");
   const translated_label = append_optional_unit_label(
-    `${t("project_page.preview.translated")} ${preview.translated_items.toLocaleString()}`,
+    `${t("project_page.preview.translated")} ${preview.translation_stats.completed_count.toLocaleString()}`,
+    rows_unit,
+  );
+  const skipped_label = append_optional_unit_label(
+    `${t("project_page.preview.skipped")} ${preview.translation_stats.skipped_count.toLocaleString()}`,
     rows_unit,
   );
   const total_label = append_optional_unit_label(
-    `${t("project_page.preview.total")} ${preview.total_items.toLocaleString()}`,
+    `${t("project_page.preview.total")} ${preview.translation_stats.total_items.toLocaleString()}`,
     rows_unit,
   );
 
@@ -501,32 +557,41 @@ function ProjectPreviewPanel(props: ProjectPreviewPanelProps): JSX.Element {
   ];
 
   return (
-    <Card className="project-home__preview-card">
-      <CardContent className="space-y-4">
+    <div className="project-home__preview-panel">
+      <dl className="project-home__preview-list">
         {stats.map((stat) => (
-          <div key={stat.label} className="flex items-center justify-between gap-5">
-            <span className="text-[12.32px] text-foreground">{stat.label}</span>
-            <span className="max-w-[272px] break-all text-right text-[12.32px] text-foreground">
-              {stat.value}
-            </span>
+          <div key={stat.label} className="project-home__preview-row">
+            <dt className="project-home__preview-label">{stat.label}</dt>
+            <dd className="project-home__preview-value">{stat.value}</dd>
           </div>
         ))}
+      </dl>
 
-        <div className="space-y-2.5 pt-1">
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-[12.32px] text-foreground">
-              {t("project_page.preview.progress")}
-            </span>
-            <span className="text-[12.32px] text-foreground">{preview.progress_percent}%</span>
-          </div>
-          <Progress value={preview.progress_percent} className="h-1.5 bg-muted" />
-          <div className="flex items-center justify-between gap-4 text-[12.32px] text-foreground">
-            <span>{translated_label}</span>
-            <span>{total_label}</span>
-          </div>
+      <div className="project-home__preview-progress">
+        <div className="project-home__preview-row">
+          <span className="project-home__preview-label">{t("project_page.preview.progress")}</span>
+          <span className="project-home__preview-value">
+            {preview.progress_percent.toFixed(2)}%
+          </span>
         </div>
-      </CardContent>
-    </Card>
+        <SegmentedProgress
+          stats={preview.translation_stats}
+          labels={{
+            skipped: t("workbench_page.stats.translation_skipped"),
+            failed: t("workbench_page.stats.translation_failed"),
+            completed: t("workbench_page.stats.translation_completed"),
+            pending: t("workbench_page.stats.translation_pending"),
+            total: t("workbench_page.stats.total_lines"),
+          }}
+        />
+        <div className="project-home__preview-progress-meta">
+          <span>{translated_label}</span>
+          <span aria-hidden="true" />
+          <span>{skipped_label}</span>
+          <span>{total_label}</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -612,8 +677,8 @@ export function ProjectPage(props: ProjectPageProps): JSX.Element {
   const project_loading_toast_id_ref = useRef<string | number | null>(null);
   const recent_projects = settings_snapshot.recent_projects.slice(0, 5);
   const has_recent_projects = recent_projects.length > 0;
-  const create_footer_class_name = "project-home__footer mt-auto justify-center";
-  const open_footer_class_name = "project-home__footer mt-auto justify-center";
+  const create_footer_class_name = "project-home__footer";
+  const open_footer_class_name = "project-home__footer";
 
   function clear_selected_project(): void {
     set_selected_project(null);
@@ -1069,11 +1134,9 @@ export function ProjectPage(props: ProjectPageProps): JSX.Element {
               <span className="project-home__dropzone-icon">
                 <SquareMousePointer className="size-11 stroke-[1.85]" />
               </span>
-              <div className="mx-auto flex w-full max-w-[288px] flex-col items-center space-y-0.5 text-center">
-                <p className="w-full truncate text-[14.4px] tracking-[-0.02em] font-medium text-foreground">
-                  {selected_source.name}
-                </p>
-                <p className="w-full text-[12.16px] text-[color:var(--project-home-subtitle)]">
+              <div className="project-home__selected-summary">
+                <p className="project-home__selected-name">{selected_source.name}</p>
+                <p className="project-home__selected-status">
                   {t("project_page.create.ready_status").replace(
                     "{COUNT}",
                     selected_source.source_file_count.toString(),
@@ -1159,13 +1222,11 @@ export function ProjectPage(props: ProjectPageProps): JSX.Element {
           <span className="project-home__dropzone-icon">
             <SquareMousePointer className="size-11 stroke-[1.85]" />
           </span>
-          <div className="mx-auto flex w-full max-w-[288px] flex-col items-center space-y-0.5 text-center">
-            <p className="w-full truncate text-[14.4px] tracking-[-0.02em] font-medium text-foreground">
+          <div className="project-home__selected-summary">
+            <p className="project-home__selected-name">
               {extract_file_name(selected_project.path)}
             </p>
-            <p className="w-full text-[12.16px] text-[color:var(--project-home-subtitle)]">
-              {t("project_page.open.ready_status")}
-            </p>
+            <p className="project-home__selected-status">{t("project_page.open.ready_status")}</p>
           </div>
         </button>
       </div>
@@ -1227,22 +1288,21 @@ export function ProjectPage(props: ProjectPageProps): JSX.Element {
         className="project-home page-shell page-shell--full"
         data-sidebar-collapsed={String(props.is_sidebar_collapsed)}
       >
-        <div className="project-home__layout grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-6">
+        <div className="project-home__layout">
           <Card variant="panel" className="project-home__panel">
             <PanelHeader
-              accent_class_name="bg-[color:var(--project-home-source)]"
+              icon={FilePlus}
               title={t("project_page.create.title")}
               subtitle={t("project_page.create.subtitle")}
+              tone="source"
             />
 
-            <CardContent className="flex flex-1 flex-col gap-6">
+            <CardContent className="project-home__panel-content">
               {source_dropzone}
 
-              <section className="space-y-4 pt-4">
-                <h3 className="text-[16px] leading-none tracking-[-0.02em] font-medium text-foreground">
-                  {t("project_page.formats.title")}
-                </h3>
-                <div className="grid grid-cols-2 gap-2">
+              <section className="project-home__panel-section">
+                <h3 className="project-home__section-title">{t("project_page.formats.title")}</h3>
+                <div className="project-home__format-grid">
                   {PROJECT_FORMAT_SUPPORT_ITEMS.map((format_item) => (
                     <FormatSupportCard
                       key={format_item.id}
@@ -1256,7 +1316,7 @@ export function ProjectPage(props: ProjectPageProps): JSX.Element {
 
             <CardFooter className={create_footer_class_name}>
               <ProjectActionButton
-                icon={File}
+                icon={FilePlus}
                 label={t("project_page.create.action")}
                 loading_label={t("app.action.loading")}
                 is_loading={is_creating_project}
@@ -1270,26 +1330,36 @@ export function ProjectPage(props: ProjectPageProps): JSX.Element {
 
           <Card variant="panel" className="project-home__panel">
             <PanelHeader
-              accent_class_name="bg-[color:var(--project-home-project)]"
+              icon={FileInput}
               title={t("project_page.open.title")}
               subtitle={t("project_page.open.subtitle")}
+              tone="project"
             />
 
-            <CardContent className="flex flex-1 flex-col gap-6">
+            <CardContent className="project-home__panel-content">
               {open_dropzone}
 
-              <section className="space-y-4 pt-4">
-                <h3 className="text-[16px] leading-none tracking-[-0.02em] font-medium text-foreground">
+              <section className="project-home__panel-section project-home__recent-section">
+                <h3 className="project-home__section-title">
                   {t("project_page.open.recent_title")}
                 </h3>
 
-                <div>{recent_project_content}</div>
+                <div
+                  className={cn(
+                    "project-home__recent-content",
+                    selected_project !== null && selected_project.preview !== null
+                      ? "project-home__recent-content--preview"
+                      : null,
+                  )}
+                >
+                  {recent_project_content}
+                </div>
               </section>
             </CardContent>
 
             <CardFooter className={open_footer_class_name}>
               <ProjectActionButton
-                icon={FolderOpen}
+                icon={FileInput}
                 label={t("project_page.open.action")}
                 loading_label={t("app.action.loading")}
                 is_loading={is_opening_project}

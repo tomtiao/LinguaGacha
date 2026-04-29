@@ -7,7 +7,7 @@ import {
   type AnalysisTaskMetrics,
 } from "@/pages/workbench-page/task-runtime/analysis-task-model";
 import type { WorkbenchStats } from "@/pages/workbench-page/types";
-import { WorkbenchSegmentedProgress } from "@/pages/workbench-page/components/workbench-segmented-progress";
+import { SegmentedProgress } from "@/widgets/segmented-progress/segmented-progress";
 import { Badge } from "@/shadcn/badge";
 import { AppButton } from "@/widgets/app-button/app-button";
 import {
@@ -60,7 +60,7 @@ export function AnalysisTaskMenu(props: AnalysisTaskMenuProps): JSX.Element {
               {progress_percent.toFixed(2)}%
             </span>
           </div>
-          <WorkbenchSegmentedProgress
+          <SegmentedProgress
             stats={props.workbench_stats}
             labels={{
               skipped: t("workbench_page.stats.analysis_skipped"),

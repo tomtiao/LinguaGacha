@@ -7,7 +7,7 @@ import {
   type TranslationTaskMetrics,
 } from "@/pages/workbench-page/task-runtime/translation-task-model";
 import type { WorkbenchStats } from "@/pages/workbench-page/types";
-import { WorkbenchSegmentedProgress } from "@/pages/workbench-page/components/workbench-segmented-progress";
+import { SegmentedProgress } from "@/widgets/segmented-progress/segmented-progress";
 import { AppButton } from "@/widgets/app-button/app-button";
 import {
   AppDropdownMenu,
@@ -56,13 +56,13 @@ export function TranslationTaskMenu(props: TranslationTaskMenuProps): JSX.Elemen
               {progress_percent.toFixed(2)}%
             </span>
           </div>
-          <WorkbenchSegmentedProgress
+          <SegmentedProgress
             stats={props.workbench_stats}
             labels={{
               skipped: t("workbench_page.stats.translation_skipped"),
-              failed: t("workbench_page.stats.error_count"),
-              completed: t("workbench_page.stats.translated"),
-              pending: t("workbench_page.stats.untranslated"),
+              failed: t("workbench_page.stats.translation_failed"),
+              completed: t("workbench_page.stats.translation_completed"),
+              pending: t("workbench_page.stats.translation_pending"),
               total: t("workbench_page.stats.total_lines"),
             }}
           />
