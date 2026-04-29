@@ -29,6 +29,16 @@ class EPUBAstWriter(Base):
         self.ast = EPUBAst(config)
 
     @staticmethod
+    def sanitize_xml_text(text: str) -> str:
+        """删除 XML 1.0 无法合法表示的控制字符。"""
+
+        return re.sub(
+            r"[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD\U00010000-\U0010FFFF]",
+            "",
+            text,
+        )
+
+    @staticmethod
     def is_nav_page(root: etree._Element) -> bool:
         # nav 页面常含 toc/landmarks，双语输出会造成链接重复指向，因此跳过插入原文段。
         for nav in root.xpath(".//*[local-name()='nav']"):
@@ -103,6 +113,8 @@ class EPUBAstWriter(Base):
     def sync_xhtml_title(
         self, root: etree._Element, src_title: str, dst_title: str
     ) -> bool:
+        safe_dst_title = self.sanitize_xml_text(dst_title)
+
         # 只同步“当前值等于 OPF 原标题”的 title，避免误改章节标题。
         changed = False
         for title_elem in root.xpath(
@@ -114,10 +126,10 @@ class EPUBAstWriter(Base):
             current_text = self.ast.normalize_slot_text(title_elem.text or "")
             if current_text != src_title:
                 continue
-            if title_elem.text == dst_title:
+            if title_elem.text == safe_dst_title:
                 continue
 
-            title_elem.text = dst_title
+            title_elem.text = safe_dst_title
             changed = True
         return changed
 
@@ -206,7 +218,10 @@ class EPUBAstWriter(Base):
 
         for child in list(block_elem):
             block_elem.remove(child)
-        block_elem.text = effective_dst
+        try:
+            block_elem.text = self.sanitize_xml_text(effective_dst)
+        except ValueError:
+            return False
         return True
 
     def apply_items_to_tree(
@@ -339,11 +354,16 @@ class EPUBAstWriter(Base):
                     )
 
             # 翻译写回
-            for (slot, elem), text in zip(resolved, dst_lines, strict=True):
-                if slot == "text":
-                    elem.text = text
-                else:
-                    elem.tail = text
+            try:
+                for (slot, elem), text in zip(resolved, dst_lines, strict=True):
+                    safe_text = self.sanitize_xml_text(text)
+                    if slot == "text":
+                        elem.text = safe_text
+                    else:
+                        elem.tail = safe_text
+            except ValueError:
+                skipped += 1
+                continue
 
             applied += 1
 
