@@ -272,6 +272,7 @@ class FakeSettingsConfig:
         self.write_translated_name_fields_to_file: bool = True
         self.auto_process_prefix_suffix_preserved_text: bool = True
         self.mtool_optimizer_enable: bool = True
+        self.protected_text_placeholder_enable: bool = False
         self.glossary_default_preset: str = ""
         self.text_preserve_default_preset: str = ""
         self.pre_translation_replacement_default_preset: str = ""

@@ -7,6 +7,9 @@ import { SettingCardRow } from "@/widgets/setting-card-row/setting-card-row";
 import { SegmentedToggle } from "@/widgets/segmented-toggle/segmented-toggle";
 
 type LaboratoryHelpField = "mtool_optimizer_enable";
+type LaboratoryToggleTitleKey =
+  | "laboratory_page.fields.mtool_optimizer_enable.title"
+  | "laboratory_page.fields.protected_text_placeholder_enable.title";
 
 const HELP_URL_BY_FIELD = {
   "zh-CN": {
@@ -49,7 +52,7 @@ export function LaboratoryPage(_props: ScreenComponentProps): JSX.Element {
   }
 
   function render_boolean_toggle(options: {
-    title_key: "laboratory_page.fields.mtool_optimizer_enable.title";
+    title_key: LaboratoryToggleTitleKey;
     value: boolean;
     disabled: boolean;
     on_value_change: (next_value: boolean) => void;
@@ -84,6 +87,20 @@ export function LaboratoryPage(_props: ScreenComponentProps): JSX.Element {
               laboratory_page_state.pending_state.mtool_optimizer_enable,
             on_value_change: (next_value) => {
               void laboratory_page_state.update_mtool_optimizer_enable(next_value);
+            },
+          })}
+        />
+        <SettingCardRow
+          title={t("laboratory_page.fields.protected_text_placeholder_enable.title")}
+          description={t("laboratory_page.fields.protected_text_placeholder_enable.description")}
+          action={render_boolean_toggle({
+            title_key: "laboratory_page.fields.protected_text_placeholder_enable.title",
+            value: laboratory_page_state.snapshot.protected_text_placeholder_enable,
+            disabled:
+              laboratory_page_state.is_task_busy ||
+              laboratory_page_state.pending_state.protected_text_placeholder_enable,
+            on_value_change: (next_value) => {
+              void laboratory_page_state.update_protected_text_placeholder_enable(next_value);
             },
           })}
         />

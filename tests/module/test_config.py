@@ -14,6 +14,7 @@ class TestConfigBehavior:
         config = Config().load("/workspace/config/missing.json")
 
         assert config.mtool_optimizer_enable is True
+        assert config.protected_text_placeholder_enable is False
         assert not hasattr(config, "force_thinking_enable")
         assert config.recent_projects == []
 
@@ -190,6 +191,7 @@ class TestConfigBehavior:
         assert saved["source_language"] == "JA"
         assert saved["target_language"] == "ZH"
         assert saved["models"][0]["id"] == "m1"
+        assert saved["protected_text_placeholder_enable"] is False
         assert saved["recent_projects"][0]["path"] == "/a"
         assert "force_thinking_enable" not in saved
         assert "auto_glossary_enable" not in saved

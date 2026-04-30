@@ -476,7 +476,13 @@ class TextProcessor(Base):
 
         return src
 
+    def get_protected_text_placeholder_enable(self) -> bool:
+        return bool(self.config.protected_text_placeholder_enable)
+
     def mask_protected_text(self, i: int, src: str, text_type: Item.TextType) -> str:
+        if not self.get_protected_text_placeholder_enable():
+            return src
+
         rule: re.Pattern[str] | None = self.get_re_sample(
             custom=self.get_text_preserve_custom_enabled(),
             text_type=text_type,
@@ -497,6 +503,13 @@ class TextProcessor(Base):
             if self.item is not None
             else ""
         )
+
+        if not self.get_protected_text_placeholder_enable():
+            for i, src in enumerate(source_text.split("\n")):
+                if src == "" or src.strip() == "" or i not in self.vaild_index:
+                    continue
+                results.append(True)
+            return results
 
         for i, src in enumerate(source_text.split("\n")):
             if src == "" or src.strip() == "" or i not in self.vaild_index:
@@ -606,8 +619,9 @@ class TextProcessor(Base):
                 # 移除模型可能额外添加的头尾空白符
                 dst = dsts.pop(0).strip()
 
-                placeholders = self.protected_placeholders_by_line.get(i, ())
-                dst = ProtectedTextMasker.unmask(dst, placeholders)
+                if self.get_protected_text_placeholder_enable():
+                    placeholders = self.protected_placeholders_by_line.get(i, ())
+                    dst = ProtectedTextMasker.unmask(dst, placeholders)
 
                 prefix_codes = self.prefix_codes.get(i) or []
                 if prefix_codes:

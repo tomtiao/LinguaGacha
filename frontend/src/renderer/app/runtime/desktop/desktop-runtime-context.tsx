@@ -56,6 +56,7 @@ export type SettingsSnapshot = {
   write_translated_name_fields_to_file: boolean;
   auto_process_prefix_suffix_preserved_text: boolean;
   mtool_optimizer_enable: boolean;
+  protected_text_placeholder_enable: boolean;
   glossary_default_preset: string;
   pre_translation_replacement_default_preset: string;
   post_translation_replacement_default_preset: string;
@@ -210,6 +211,7 @@ const DEFAULT_SETTINGS_SNAPSHOT: SettingsSnapshot = {
   write_translated_name_fields_to_file: true,
   auto_process_prefix_suffix_preserved_text: true,
   mtool_optimizer_enable: true,
+  protected_text_placeholder_enable: false,
   glossary_default_preset: "",
   pre_translation_replacement_default_preset: "",
   post_translation_replacement_default_preset: "",
@@ -341,6 +343,10 @@ export function normalize_settings_snapshot(payload: SettingsSnapshotPayload): S
     ),
     mtool_optimizer_enable: Boolean(
       snapshot.mtool_optimizer_enable ?? DEFAULT_SETTINGS_SNAPSHOT.mtool_optimizer_enable,
+    ),
+    protected_text_placeholder_enable: Boolean(
+      snapshot.protected_text_placeholder_enable ??
+      DEFAULT_SETTINGS_SNAPSHOT.protected_text_placeholder_enable,
     ),
     glossary_default_preset: String(snapshot.glossary_default_preset ?? ""),
     pre_translation_replacement_default_preset: String(

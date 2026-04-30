@@ -123,6 +123,7 @@ function create_settings_snapshot(overrides: Partial<SettingsSnapshot> = {}): Se
     write_translated_name_fields_to_file: false,
     auto_process_prefix_suffix_preserved_text: false,
     mtool_optimizer_enable: false,
+    protected_text_placeholder_enable: false,
     glossary_default_preset: "",
     pre_translation_replacement_default_preset: "",
     post_translation_replacement_default_preset: "",
@@ -286,5 +287,59 @@ describe("useLaboratoryPageState", () => {
       ["/api/settings/update", { mtool_optimizer_enable: true }],
       ["/api/settings/update", { mtool_optimizer_enable: false }],
     ]);
+  });
+
+  it("更新 protected_text_placeholder_enable 时只保存设置且不刷新项目缓存", async () => {
+    vi.mocked(api_fetch).mockImplementation(async (path, body = {}) => {
+      if (path === "/api/settings/update") {
+        return create_settings_payload(
+          create_settings_snapshot({
+            ...runtime_fixture.current.settings_snapshot,
+            ...body,
+          }),
+        ) as never;
+      }
+
+      throw new Error(`unexpected path: ${path}`);
+    });
+
+    await render_hook();
+
+    expect(latest_state).not.toBeNull();
+
+    await act(async () => {
+      await latest_state?.update_protected_text_placeholder_enable(true);
+    });
+    await flush_async_updates();
+
+    expect(latest_state?.snapshot.protected_text_placeholder_enable).toBe(true);
+    expect(runtime_fixture.current.set_settings_snapshot).toHaveBeenCalledTimes(1);
+    expect(project_prefilter_client_fixture.current.compute).not.toHaveBeenCalled();
+    expect(runtime_fixture.current.commit_local_project_patch).not.toHaveBeenCalled();
+    expect(runtime_fixture.current.align_project_runtime_ack).not.toHaveBeenCalled();
+    expect(runtime_fixture.current.refresh_project_runtime).not.toHaveBeenCalled();
+    expect(barrier_fixture.current.create_barrier_checkpoint).not.toHaveBeenCalled();
+    expect(barrier_fixture.current.wait_for_barrier).not.toHaveBeenCalled();
+    expect(vi.mocked(api_fetch).mock.calls).toEqual([
+      ["/api/settings/update", { protected_text_placeholder_enable: true }],
+    ]);
+  });
+
+  it("protected_text_placeholder_enable 更新失败时回滚并提示", async () => {
+    vi.mocked(api_fetch).mockRejectedValue(new Error("保存失败"));
+
+    await render_hook();
+
+    expect(latest_state).not.toBeNull();
+
+    await act(async () => {
+      await latest_state?.update_protected_text_placeholder_enable(true);
+    });
+    await flush_async_updates();
+
+    expect(latest_state?.snapshot.protected_text_placeholder_enable).toBe(false);
+    expect(toast_fixture.current.push_toast).toHaveBeenCalledWith("error", "保存失败");
+    expect(project_prefilter_client_fixture.current.compute).not.toHaveBeenCalled();
+    expect(barrier_fixture.current.wait_for_barrier).not.toHaveBeenCalled();
   });
 });

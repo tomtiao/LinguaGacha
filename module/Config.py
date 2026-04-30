@@ -60,6 +60,7 @@ class Config:
 
     # LaboratoryPage
     mtool_optimizer_enable: bool = True
+    protected_text_placeholder_enable: bool = False
 
     # GlossaryPage
     glossary_default_preset: str = ""

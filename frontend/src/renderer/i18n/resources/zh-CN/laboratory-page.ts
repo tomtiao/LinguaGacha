@@ -9,6 +9,10 @@ export const zh_cn_laboratory_page = {
         "◈ 可能导致 <emphasis>原文残留</emphasis> 或 <emphasis>语句不连贯</emphasis> 等问题",
       help_label: "查看 MTool 优化器说明",
     },
+    protected_text_placeholder_enable: {
+      title: "RPG Maker 控制符替换占位符",
+      description: "可能改善翻译时控制符被破坏的问题",
+    },
   },
   feedback: {
     refresh_failed: "当前无法刷新实验室设置，请稍后重试。",

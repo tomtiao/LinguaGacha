@@ -50,6 +50,24 @@ def test_app_settings_snapshot_handles_mtool_optimizer_field() -> None:
     assert snapshot.to_dict()["mtool_optimizer_enable"] is True
 
 
+def test_app_settings_snapshot_handles_protected_text_placeholder_field() -> None:
+    snapshot = AppSettingsSnapshot.from_dict(
+        {
+            "protected_text_placeholder_enable": True,
+        }
+    )
+
+    assert snapshot.protected_text_placeholder_enable is True
+    assert snapshot.to_dict()["protected_text_placeholder_enable"] is True
+
+
+def test_app_settings_snapshot_defaults_protected_text_placeholder_disabled() -> None:
+    snapshot = AppSettingsSnapshot.from_dict({})
+
+    assert snapshot.protected_text_placeholder_enable is False
+    assert snapshot.to_dict()["protected_text_placeholder_enable"] is False
+
+
 def test_app_settings_snapshot_ignores_invalid_recent_projects_payload() -> None:
     snapshot = AppSettingsSnapshot.from_dict(
         {

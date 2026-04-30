@@ -59,19 +59,25 @@ def test_update_app_settings_persists_laboratory_toggle_keys(
     result = settings_app_service.update_app_settings(
         {
             "mtool_optimizer_enable": True,
+            "protected_text_placeholder_enable": True,
         }
     )
 
     settings = result["settings"]
 
     assert settings["mtool_optimizer_enable"] is True
+    assert settings["protected_text_placeholder_enable"] is True
     assert fake_settings_config.mtool_optimizer_enable is True
+    assert fake_settings_config.protected_text_placeholder_enable is True
     assert settings_app_service.applied_localizer_languages == []
     assert settings_app_service.emitted_events == [
         (
             Base.Event.CONFIG_UPDATED,
             {
-                "keys": ["mtool_optimizer_enable"],
+                "keys": [
+                    "mtool_optimizer_enable",
+                    "protected_text_placeholder_enable",
+                ],
                 "settings": settings,
             },
         )

@@ -125,6 +125,7 @@ function create_settings_snapshot(overrides: Partial<SettingsSnapshot> = {}): Se
     write_translated_name_fields_to_file: false,
     auto_process_prefix_suffix_preserved_text: false,
     mtool_optimizer_enable: false,
+    protected_text_placeholder_enable: false,
     glossary_default_preset: "",
     pre_translation_replacement_default_preset: "",
     post_translation_replacement_default_preset: "",

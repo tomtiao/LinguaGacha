@@ -709,7 +709,10 @@ class TestTextProcessor:
             text_preserve_entries=({"src": r"\\C\[\d+\]"},),
         )
         processor = TextProcessor(
-            Config(auto_process_prefix_suffix_preserved_text=False),
+            Config(
+                auto_process_prefix_suffix_preserved_text=False,
+                protected_text_placeholder_enable=True,
+            ),
             item,
             snapshot,
         )
@@ -731,6 +734,50 @@ class TestTextProcessor:
 
         assert result == r"造成\C[20]5\C[0]点伤害"
 
+    def test_pre_process_keeps_protected_text_unmasked_by_default(self) -> None:
+        item = Item(
+            src=r"\C[20]5\C[0]点のダメージを与える",
+            text_type=Item.TextType.NONE,
+        )
+        snapshot = create_snapshot(
+            text_preserve_entries=({"src": r"\\C\[\d+\]"},),
+        )
+        processor = TextProcessor(
+            Config(auto_process_prefix_suffix_preserved_text=False),
+            item,
+            snapshot,
+        )
+
+        processor.pre_process()
+
+        assert processor.srcs == [r"\C[20]5\C[0]点のダメージを与える"]
+        assert processor.samples == []
+        assert processor.protected_placeholders_by_line == {}
+        assert processor.validate_protected_placeholders(["造成5点伤害"]) == [True]
+
+    def test_post_process_skips_protected_placeholder_unmask_when_disabled(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        item = Item(
+            src=r"\C[20]5\C[0]点のダメージを与える",
+            text_type=Item.TextType.NONE,
+        )
+        snapshot = create_snapshot(
+            text_preserve_entries=({"src": r"\\C\[\d+\]"},),
+        )
+        processor = TextProcessor(
+            Config(auto_process_prefix_suffix_preserved_text=False),
+            item,
+            snapshot,
+        )
+        monkeypatch.setattr(processor, "auto_fix", lambda src, dst: dst)
+        monkeypatch.setattr(processor, "replace_post_translation", lambda dst: dst)
+
+        processor.pre_process()
+        _, result = processor.post_process(["造成<LG_P0>5<LG_P1>点伤害"])
+
+        assert result == "造成<LG_P0>5<LG_P1>点伤害"
+
     def test_post_process_keeps_restored_control_code_bracket_after_prefix_restore(
         self,
     ) -> None:
@@ -747,7 +794,9 @@ class TestTextProcessor:
         snapshot = create_snapshot(
             text_preserve_mode=DataManager.TextPreserveMode.SMART,
         )
-        processor = TextProcessor(Config(), item, snapshot)
+        processor = TextProcessor(
+            Config(protected_text_placeholder_enable=True), item, snapshot
+        )
 
         processor.pre_process()
         _name, result = processor.post_process(
@@ -1224,7 +1273,9 @@ class TestTextProcessor:
     ) -> None:
         item = Item(src="<b></b>\n[a]", text_type=Item.TextType.NONE)
         snapshot = create_snapshot(text_preserve_mode=DataManager.TextPreserveMode.OFF)
-        processor = TextProcessor(Config(), item, snapshot)
+        processor = TextProcessor(
+            Config(protected_text_placeholder_enable=True), item, snapshot
+        )
 
         monkeypatch.setattr(
             processor,
@@ -1282,7 +1333,10 @@ class TestTextProcessor:
             text_preserve_entries=({"src": "<[^>]+>"},),
         )
         processor = TextProcessor(
-            Config(auto_process_prefix_suffix_preserved_text=False),
+            Config(
+                auto_process_prefix_suffix_preserved_text=False,
+                protected_text_placeholder_enable=True,
+            ),
             item,
             snapshot,
         )

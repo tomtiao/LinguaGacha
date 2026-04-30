@@ -12,6 +12,10 @@ export const en_us_laboratory_page = {
         "◈ It may cause issues such as <emphasis>leftover source text</emphasis> or <emphasis>awkward sentence flow</emphasis>",
       help_label: "View the MTool Optimizer guide",
     },
+    protected_text_placeholder_enable: {
+      title: "Replace RPG Maker control codes with placeholders",
+      description: "May reduce control code corruption during translation.",
+    },
   },
   feedback: {
     refresh_failed: "Unable to refresh laboratory settings right now. Please try again later.",

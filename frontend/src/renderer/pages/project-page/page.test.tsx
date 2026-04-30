@@ -209,6 +209,7 @@ function create_settings_snapshot(overrides: Record<string, unknown> = {}) {
     write_translated_name_fields_to_file: true,
     auto_process_prefix_suffix_preserved_text: true,
     mtool_optimizer_enable: true,
+    protected_text_placeholder_enable: false,
     glossary_default_preset: "",
     pre_translation_replacement_default_preset: "",
     post_translation_replacement_default_preset: "",

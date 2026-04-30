@@ -27,11 +27,13 @@ type UseLaboratoryPageStateResult = {
   pending_state: LaboratoryPendingState;
   is_task_busy: boolean;
   update_mtool_optimizer_enable: (next_checked: boolean) => Promise<void>;
+  update_protected_text_placeholder_enable: (next_checked: boolean) => Promise<void>;
 };
 
 function create_pending_state(): LaboratoryPendingState {
   return {
     mtool_optimizer_enable: false,
+    protected_text_placeholder_enable: false,
   };
 }
 
@@ -128,6 +130,10 @@ export function useLaboratoryPageState(): UseLaboratoryPageStateResult {
 
           if ("mtool_optimizer_enable" in request) {
             reverted_snapshot.mtool_optimizer_enable = previous_snapshot.mtool_optimizer_enable;
+          }
+          if ("protected_text_placeholder_enable" in request) {
+            reverted_snapshot.protected_text_placeholder_enable =
+              previous_snapshot.protected_text_placeholder_enable;
           }
 
           return reverted_snapshot;
@@ -246,14 +252,43 @@ export function useLaboratoryPageState(): UseLaboratoryPageStateResult {
     ],
   );
 
+  const update_protected_text_placeholder_enable = useCallback(
+    async (next_checked: boolean): Promise<void> => {
+      const previous_snapshot = snapshot_ref.current;
+
+      if (is_task_busy || previous_snapshot.protected_text_placeholder_enable === next_checked) {
+        return;
+      }
+
+      await commit_update(
+        "protected_text_placeholder_enable",
+        {
+          protected_text_placeholder_enable: next_checked,
+        },
+        {
+          ...previous_snapshot,
+          protected_text_placeholder_enable: next_checked,
+        },
+      );
+    },
+    [commit_update, is_task_busy],
+  );
+
   const value = useMemo<UseLaboratoryPageStateResult>(() => {
     return {
       snapshot,
       pending_state,
       is_task_busy,
       update_mtool_optimizer_enable,
+      update_protected_text_placeholder_enable,
     };
-  }, [is_task_busy, pending_state, snapshot, update_mtool_optimizer_enable]);
+  }, [
+    is_task_busy,
+    pending_state,
+    snapshot,
+    update_mtool_optimizer_enable,
+    update_protected_text_placeholder_enable,
+  ]);
 
   return value;
 }
