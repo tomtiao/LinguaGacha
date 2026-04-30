@@ -15,9 +15,9 @@
 - `字幕`、`電子書籍`、`ゲームテキストなど`、色々なテキストタイプと形式に対応。
 - `Claude`、`ChatGPT`、`DeepSeek`、`SakuraLLM` などのローカルおよびオンラインインターフェースをサポート
 
-> <img width="2570" height="1605" alt="sample_01" src="https://github.com/user-attachments/assets/038a9bc3-4821-4b19-8221-eec32e823599" />
+> <img width="2570" height="1605" alt="01" src="https://github.com/user-attachments/assets/898f6606-9c74-47db-b63e-33d544cfdf15" />
 
-> <img width="2570" height="1605" alt="sample_02" src="https://github.com/user-attachments/assets/0fcd4749-53cd-496a-bfe6-f1270cf727f0" />
+> <img width="2570" height="1605" alt="02" src="https://github.com/user-attachments/assets/7f6d6556-d6b2-4fb1-b509-2d8272814290" />
 
 ## 特別なお知らせ ⚠️
 - 翻訳中に [LinguaGacha](https://github.com/neavo/LinguaGacha) を使用する場合は、作品の情報やリリースページの目立つ場所に明確な帰属を含めてください！

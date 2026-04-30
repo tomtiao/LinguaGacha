@@ -16,9 +16,9 @@
 - Supports various text types and formats such as `Subtitle`, `E-Book`, and `Game Text`
 - Supports both local and online interfaces such as `Claude`, `ChatGPT`, `DeepSeek`, `SakuraLLM`
 
-> <img width="2570" height="1605" alt="sample_01" src="https://github.com/user-attachments/assets/038a9bc3-4821-4b19-8221-eec32e823599" />
+> <img width="2570" height="1605" alt="01" src="https://github.com/user-attachments/assets/898f6606-9c74-47db-b63e-33d544cfdf15" />
 
-> <img width="2570" height="1605" alt="sample_02" src="https://github.com/user-attachments/assets/0fcd4749-53cd-496a-bfe6-f1270cf727f0" />
+> <img width="2570" height="1605" alt="02" src="https://github.com/user-attachments/assets/7f6d6556-d6b2-4fb1-b509-2d8272814290" />
 
 ## Special Notice ⚠️
 - If you use [LinguaGacha](https://github.com/neavo/LinguaGacha) during translation, please include clear attribution in prominent locations of your work's information or release pages!
@@ -82,6 +82,9 @@
 - See [Wiki - Supported Formats](https://github.com/neavo/LinguaGacha/wiki/%E6%94%AF%E6%8C%81%E7%9A%84%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F) for examples. Submit format requests via [ISSUES](https://github.com/neavo/LinguaGacha/issues)
 
 ## Recent Updates 📅
+- 2026430 v0.99.3
+  - Optimizations and Improvements #535 #536 #539 #541
+
 - 2026428 v0.99.2
   - Optimizations and Improvements #531 #533
 
