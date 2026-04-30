@@ -1,0 +1,66 @@
+import re
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class ProtectedPlaceholder:
+    placeholder: str
+    text: str
+
+
+@dataclass(frozen=True)
+class ProtectedMaskResult:
+    text: str
+    placeholders: tuple[ProtectedPlaceholder, ...]
+
+
+class ProtectedTextMasker:
+    PLACEHOLDER_TEMPLATE: str = "<LG_P{INDEX}>"
+    PLACEHOLDER_PATTERN: re.Pattern[str] = re.compile(r"<LG_P\d+>")
+
+    @classmethod
+    def mask(cls, text: str, rule: re.Pattern[str] | None) -> ProtectedMaskResult:
+        if rule is None:
+            return ProtectedMaskResult(text=text, placeholders=())
+
+        placeholders: list[ProtectedPlaceholder] = []
+
+        def replace(match: re.Match[str]) -> str:
+            protected_text = match.group(0)
+            if protected_text == "":
+                return protected_text
+
+            placeholder = cls.PLACEHOLDER_TEMPLATE.replace(
+                "{INDEX}", str(len(placeholders))
+            )
+            placeholders.append(
+                ProtectedPlaceholder(placeholder=placeholder, text=protected_text)
+            )
+            return placeholder
+
+        return ProtectedMaskResult(
+            text=rule.sub(replace, text),
+            placeholders=tuple(placeholders),
+        )
+
+    @classmethod
+    def validate(
+        cls, text: str, placeholders: tuple[ProtectedPlaceholder, ...]
+    ) -> bool:
+        if not placeholders:
+            return True
+
+        expected = [placeholder.placeholder for placeholder in placeholders]
+        actual = cls.PLACEHOLDER_PATTERN.findall(text)
+        return actual == expected
+
+    @classmethod
+    def unmask(cls, text: str, placeholders: tuple[ProtectedPlaceholder, ...]) -> str:
+        restored = text
+        for placeholder in placeholders:
+            restored = restored.replace(placeholder.placeholder, placeholder.text)
+        return restored
+
+    @classmethod
+    def strip_placeholders(cls, text: str) -> str:
+        return cls.PLACEHOLDER_PATTERN.sub("", text)

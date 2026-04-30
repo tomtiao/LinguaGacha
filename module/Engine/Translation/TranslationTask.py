@@ -214,6 +214,17 @@ class TranslationTask(Base):
             ):
                 self.items[0].set_retry_count(self.items[0].get_retry_count() + 1)
 
+        had_failure_before_placeholder_check = any(
+            v != ResponseChecker.Error.NONE for v in checks
+        )
+        checks = self.merge_placeholder_checks(dsts, checks)
+        if (
+            any(v == ResponseChecker.Error.LINE_ERROR_PLACEHOLDER for v in checks)
+            and len(self.items) == 1
+            and not had_failure_before_placeholder_check
+        ):
+            self.items[0].set_retry_count(self.items[0].get_retry_count() + 1)
+
         file_log = console_log.copy()
         response_think_log = response_think.strip("\n")
         response_result_log = response_result.strip("\n")
@@ -272,6 +283,41 @@ class TranslationTask(Base):
                 output_tokens=request_response.output_tokens,
             )
         return self.build_empty_result()
+
+    def merge_placeholder_checks(
+        self, dsts: list[str], checks: list[ResponseChecker.Error]
+    ) -> list[ResponseChecker.Error]:
+        if len(dsts) == 0 or len(checks) == 0:
+            return checks
+
+        merged_checks = checks.copy()
+        dst_offset = 0
+        check_offset = 0
+        for processor in self.processors:
+            length = len(processor.srcs)
+            processor_dsts = dsts[dst_offset : dst_offset + length]
+            validator = getattr(processor, "validate_protected_placeholders", None)
+            if callable(validator):
+                placeholder_results = validator(processor_dsts)
+            else:
+                placeholder_results = [True] * length
+
+            for i, is_valid in enumerate(placeholder_results):
+                check_index = check_offset + i
+                if check_index >= len(merged_checks):
+                    continue
+                if (
+                    not is_valid
+                    and merged_checks[check_index] == ResponseChecker.Error.NONE
+                ):
+                    merged_checks[check_index] = (
+                        ResponseChecker.Error.LINE_ERROR_PLACEHOLDER
+                    )
+
+            dst_offset = dst_offset + length
+            check_offset = check_offset + length
+
+        return merged_checks
 
     def request(
         self,
@@ -482,6 +528,8 @@ class TranslationTask(Base):
             return Localizer.get().response_checker_line_error_empty_line
         elif error == ResponseChecker.Error.LINE_ERROR_SIMILARITY:
             return Localizer.get().response_checker_line_error_similarity
+        elif error == ResponseChecker.Error.LINE_ERROR_PLACEHOLDER:
+            return Localizer.get().response_checker_line_error_placeholder
         elif error == ResponseChecker.Error.FAIL_DEGRADATION:
             return Localizer.get().response_checker_fail_degradation
         else:

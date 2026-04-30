@@ -9,6 +9,8 @@ from module.Data.Core.Item import Item
 from module.Config import Config
 from module.Data.DataManager import DataManager
 from module.QualityRule.QualityRuleSnapshot import QualityRuleSnapshot
+from module.Text.ProtectedTextMasker import ProtectedPlaceholder
+from module.Text.ProtectedTextMasker import ProtectedTextMasker
 from module.TextProcessor import TextProcessor
 
 
@@ -200,7 +202,11 @@ class TestTextProcessor:
     def test_pre_process_skips_blank_lines_and_adds_markdown_sample(self) -> None:
         item = Item(src="   \nhello", text_type=Item.TextType.MD)
         snapshot = create_snapshot(text_preserve_mode=DataManager.TextPreserveMode.OFF)
-        processor = TextProcessor(Config(), item, snapshot)
+        processor = TextProcessor(
+            Config(auto_process_prefix_suffix_preserved_text=False),
+            item,
+            snapshot,
+        )
 
         processor.pre_process()
 
@@ -653,6 +659,65 @@ class TestTextProcessor:
             r"前缀\N[70]中间\[193]后缀",
             Item.TextType.NONE,
         )
+
+    def test_protected_text_masker_validates_and_restores_sequence(self) -> None:
+        result = ProtectedTextMasker.mask(
+            r"\C[20]5\C[0]点のダメージを与える",
+            re.compile(r"\\C\[\d+\]"),
+        )
+
+        assert result.text == "<LG_P0>5<LG_P1>点のダメージを与える"
+        assert result.placeholders == (
+            ProtectedPlaceholder(placeholder="<LG_P0>", text=r"\C[20]"),
+            ProtectedPlaceholder(placeholder="<LG_P1>", text=r"\C[0]"),
+        )
+        assert (
+            ProtectedTextMasker.validate(
+                "造成<LG_P0>5<LG_P1>点伤害", result.placeholders
+            )
+            is True
+        )
+        assert (
+            ProtectedTextMasker.validate("造成<LG_P0>5点伤害", result.placeholders)
+            is False
+        )
+        assert (
+            ProtectedTextMasker.unmask("造成<LG_P0>5<LG_P1>点伤害", result.placeholders)
+            == r"造成\C[20]5\C[0]点伤害"
+        )
+
+    def test_pre_and_post_process_round_trip_masked_preserved_text(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        item = Item(
+            src=r"\C[20]5\C[0]点のダメージを与える",
+            text_type=Item.TextType.NONE,
+        )
+        snapshot = create_snapshot(
+            text_preserve_entries=({"src": r"\\C\[\d+\]"},),
+        )
+        processor = TextProcessor(
+            Config(auto_process_prefix_suffix_preserved_text=False),
+            item,
+            snapshot,
+        )
+
+        monkeypatch.setattr(processor, "auto_fix", lambda src, dst: dst)
+        monkeypatch.setattr(processor, "replace_post_translation", lambda dst: dst)
+
+        processor.pre_process()
+
+        assert processor.srcs == ["<LG_P0>5<LG_P1>点のダメージを与える"]
+        assert processor.validate_protected_placeholders(
+            ["造成<LG_P0>5<LG_P1>点伤害"]
+        ) == [True]
+        assert processor.validate_protected_placeholders(["造成<LG_P0>5点伤害"]) == [
+            False
+        ]
+
+        _, result = processor.post_process(["造成<LG_P0>5<LG_P1>点伤害"])
+
+        assert result == r"造成\C[20]5\C[0]点伤害"
 
     def test_get_rule_returns_none_when_preset_file_missing(
         self, monkeypatch: pytest.MonkeyPatch
@@ -1132,9 +1197,9 @@ class TestTextProcessor:
 
         processor.pre_process()
 
-        assert processor.srcs == ["[a]"]
+        assert processor.srcs == ["<LG_P0>"]
         assert processor.vaild_index == {1}
-        assert processor.samples == ["[a]"]
+        assert processor.samples == ["<LG_P0>"]
 
     def test_pre_process_skips_fully_preserved_line_when_auto_process_disabled(
         self, monkeypatch: pytest.MonkeyPatch
@@ -1183,7 +1248,7 @@ class TestTextProcessor:
 
         processor.pre_process()
 
-        assert processor.srcs == ["<b>hello</b>"]
+        assert processor.srcs == ["<LG_P0>hello<LG_P1>"]
         assert processor.vaild_index == {0}
         assert processor.prefix_codes == {}
         assert processor.suffix_codes == {}

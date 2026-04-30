@@ -21,6 +21,8 @@ from module.Localizer.Localizer import Localizer
 from module.Normalizer import Normalizer
 from module.QualityRule.QualityRuleSnapshot import QualityRuleSnapshot
 from module.RubyCleaner import RubyCleaner
+from module.Text.ProtectedTextMasker import ProtectedPlaceholder
+from module.Text.ProtectedTextMasker import ProtectedTextMasker
 from module.Utils.JSONTool import JSONTool
 
 
@@ -69,6 +71,9 @@ class TextProcessor(Base):
         self.vaild_index: set[int] = set()
         self.prefix_codes: dict[int, list[str]] = {}
         self.suffix_codes: dict[int, list[str]] = {}
+        self.protected_placeholders_by_line: dict[
+            int, tuple[ProtectedPlaceholder, ...]
+        ] = {}
         # 始终保留每行的头尾空白（与文本保护规则及其开关解耦）。
         self.leading_whitespace_by_line: dict[int, str] = {}
         self.trailing_whitespace_by_line: dict[int, str] = {}
@@ -471,6 +476,39 @@ class TextProcessor(Base):
 
         return src
 
+    def mask_protected_text(self, i: int, src: str, text_type: Item.TextType) -> str:
+        rule: re.Pattern[str] | None = self.get_re_sample(
+            custom=self.get_text_preserve_custom_enabled(),
+            text_type=text_type,
+        )
+        result = ProtectedTextMasker.mask(src, rule)
+        if result.placeholders:
+            self.protected_placeholders_by_line[i] = result.placeholders
+            self.samples.extend([v.placeholder for v in result.placeholders])
+        return result.text
+
+    def validate_protected_placeholders(self, dsts: list[str]) -> list[bool]:
+        results: list[bool] = []
+        dst_index = 0
+        source_text = (
+            self.process_source_text
+            if self.process_source_text is not None
+            else self.item.get_src()
+            if self.item is not None
+            else ""
+        )
+
+        for i, src in enumerate(source_text.split("\n")):
+            if src == "" or src.strip() == "" or i not in self.vaild_index:
+                continue
+
+            dst = dsts[dst_index] if dst_index < len(dsts) else ""
+            placeholders = self.protected_placeholders_by_line.get(i, ())
+            results.append(ProtectedTextMasker.validate(dst, placeholders))
+            dst_index = dst_index + 1
+
+        return results
+
     # 判断整行是否完全命中保护规则
     def is_fully_preserved_line(self, src: str, text_type: Item.TextType) -> bool:
         # 这里必须使用整行匹配，避免把“部分命中”的可翻译正文误判为可跳过行。
@@ -524,14 +562,8 @@ class TextProcessor(Base):
                     # 译前替换
                     src = self.replace_pre_translation(src)
 
-                    # 查找控制字符示例
-                    rule: re.Pattern | None = self.get_re_sample(
-                        custom=self.get_text_preserve_custom_enabled(),
-                        text_type=text_type,
-                    )
-
-                    if rule is not None:
-                        self.samples.extend([v.group(0) for v in rule.finditer(src)])
+                    # 模型只看到稳定占位符，避免直接改坏 RPG Maker 控制符。
+                    src = self.mask_protected_text(i, src, text_type)
 
                     # 补充
                     if text_type == Item.TextType.MD:
@@ -573,6 +605,9 @@ class TextProcessor(Base):
             else:
                 # 移除模型可能额外添加的头尾空白符
                 dst = dsts.pop(0).strip()
+
+                placeholders = self.protected_placeholders_by_line.get(i, ())
+                dst = ProtectedTextMasker.unmask(dst, placeholders)
 
                 # 自动修复
                 dst = self.auto_fix(src, dst)

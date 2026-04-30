@@ -53,6 +53,7 @@ class FakeProcessor:
         self.samples: list[str] = []
         self.post_result = post_result
         self.post_args: list[str] = []
+        self.placeholder_results: list[bool] = [True] * len(srcs)
 
     def pre_process(self) -> None:
         return None
@@ -60,6 +61,10 @@ class FakeProcessor:
     def post_process(self, dsts: list[str]) -> tuple[str | None, str]:
         self.post_args = dsts
         return self.post_result
+
+    def validate_protected_placeholders(self, dsts: list[str]) -> list[bool]:
+        del dsts
+        return self.placeholder_results
 
 
 class FakeResponseChecker:
@@ -288,6 +293,10 @@ class TestTranslationTaskUtils:
             (
                 ResponseChecker.Error.LINE_ERROR_SIMILARITY,
                 "response_checker_line_error_similarity",
+            ),
+            (
+                ResponseChecker.Error.LINE_ERROR_PLACEHOLDER,
+                "response_checker_line_error_placeholder",
             ),
             (
                 ResponseChecker.Error.FAIL_DEGRADATION,
@@ -598,6 +607,40 @@ class TestTranslationTaskApplyResponseData:
         assert task.items[0].get_dst() == "A_DST"
         assert task.items[1].get_status() == Base.ProjectStatus.NONE
         assert task.items[1].get_dst() == ""
+
+    def test_apply_response_data_rejects_corrupted_placeholders(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        task = create_task(skip_response_check=False)
+        checker = FakeResponseChecker([ResponseChecker.Error.NONE])
+        processor = FakeProcessor(["<LG_P0>text"], (None, "should-not-apply"))
+        processor.placeholder_results = [False]
+        task.response_checker = checker
+        task.processors = [processor]
+
+        captured: dict[str, Any] = {}
+        monkeypatch.setattr(
+            task,
+            "print_log_table",
+            lambda checks, *args: captured.setdefault("checks", checks),
+        )
+
+        result = task.apply_response_data(
+            prepared={"srcs": ["<LG_P0>text"], "console_log": []},
+            request_response=create_request_response(
+                start_time=1.0,
+                input_tokens=5,
+                output_tokens=6,
+                decoded_translations=("broken text",),
+            ),
+        )
+
+        assert result["row_count"] == 0
+        assert captured["checks"] == [ResponseChecker.Error.LINE_ERROR_PLACEHOLDER]
+        assert task.items[0].get_status() == Base.ProjectStatus.NONE
+        assert task.items[0].get_dst() == ""
+        assert task.items[0].get_retry_count() == 1
+        assert processor.post_args == []
 
 
 class TestTranslationTaskRequestAndStart:

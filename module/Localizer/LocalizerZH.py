@@ -74,6 +74,7 @@ class LocalizerZH:
     response_checker_fail_degradation: str = "发生退化现象"
     response_checker_line_error_empty_line: str = "存在空行"
     response_checker_line_error_similarity: str = "较高相似度"
+    response_checker_line_error_placeholder: str = "保护占位符异常"
     project_store_ingesting_assets: str = "正在收纳资产 …"
     project_store_ingesting_file: str = "正在收纳资产：{NAME}"
     project_store_parsing_items: str = "正在解析翻译条目 …"

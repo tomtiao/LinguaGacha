@@ -345,6 +345,24 @@ class PromptBuilder(Base):
         if not unique_samples:
             return ""
 
+        placeholder_samples = sorted(
+            v for v in unique_samples if v.startswith("<LG_P") and v.endswith(">")
+        )
+        if placeholder_samples:
+            sample_text = ", ".join(placeholder_samples)
+            if self.is_prompt_ui_zh():
+                return (
+                    "保护占位符示例：\n"
+                    + sample_text
+                    + "\n请原样保留这些占位符，不要翻译、删除、复制或修改。"
+                )
+            return (
+                "Protected Placeholder Samples:\n"
+                + sample_text
+                + "\nKeep these placeholders exactly unchanged. Do not translate, "
+                + "remove, duplicate, or modify them."
+            )
+
         # 只有在提示词中明确包含 控制符 时才添加相应示例
         main_lower = main.lower()
         has_instruction = (

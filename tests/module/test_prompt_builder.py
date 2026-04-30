@@ -248,6 +248,21 @@ class TestPromptBuilder:
         assert "<a>" in result
         assert "<b>" in result
 
+    def test_build_control_characters_samples_always_instructs_mask_placeholders(
+        self,
+    ) -> None:
+        config = Config(target_language=BaseLanguage.Enum.ZH)
+        builder = PromptBuilder(
+            config=config,
+            quality_snapshot=cast(Any, FakeQualitySnapshot()),
+        )
+
+        result = builder.build_control_characters_samples("普通内容", ["<LG_P0>"])
+
+        assert result.startswith("保护占位符示例：\n")
+        assert "<LG_P0>" in result
+        assert "不要翻译、删除、复制或修改" in result
+
     def test_build_inputs_returns_jsonline_block(self) -> None:
         Localizer.set_app_language(BaseLanguage.Enum.EN)
         config = Config(target_language=BaseLanguage.Enum.EN)

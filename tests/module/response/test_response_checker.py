@@ -318,6 +318,24 @@ class TestResponseCheckerCheckLines:
 
         assert checks == [ResponseChecker.Error.NONE]
 
+    def test_check_lines_removes_mask_placeholders_before_similarity_check(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        checker = create_checker(
+            create_config(BaseLanguage.Enum.EN, BaseLanguage.Enum.ZH)
+        )
+        monkeypatch.setattr(
+            "module.Response.ResponseChecker.TextHelper.check_similarity_by_jaccard",
+            classmethod(lambda cls, x, y: 0.0),
+        )
+
+        checks = checker.check_lines(
+            ["<LG_P0>x<LG_P1>"], ["<LG_P0>y<LG_P1>"], Item.TextType.NONE
+        )
+
+        assert checks == [ResponseChecker.Error.NONE]
+
 
 class TestResponseCheckerSourceLanguageALL:
     """验证 source_language=BaseLanguage.ALL 时，ResponseChecker 不会因语言过滤短路。"""
