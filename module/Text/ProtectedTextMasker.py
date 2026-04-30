@@ -56,10 +56,11 @@ class ProtectedTextMasker:
 
     @classmethod
     def unmask(cls, text: str, placeholders: tuple[ProtectedPlaceholder, ...]) -> str:
-        restored = text
-        for placeholder in placeholders:
-            restored = restored.replace(placeholder.placeholder, placeholder.text)
-        return restored
+        text_by_placeholder = {v.placeholder: v.text for v in placeholders}
+        return cls.PLACEHOLDER_PATTERN.sub(
+            lambda match: text_by_placeholder.get(match.group(0), match.group(0)),
+            text,
+        )
 
     @classmethod
     def strip_placeholders(cls, text: str) -> str:

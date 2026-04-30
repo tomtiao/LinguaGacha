@@ -686,6 +686,18 @@ class TestTextProcessor:
             == r"造成\C[20]5\C[0]点伤害"
         )
 
+    def test_protected_text_masker_unmasks_without_cascading_replacements(
+        self,
+    ) -> None:
+        placeholders = (
+            ProtectedPlaceholder(placeholder="<LG_P0>", text="literal <LG_P1>"),
+            ProtectedPlaceholder(placeholder="<LG_P1>", text="CONTROL"),
+        )
+
+        result = ProtectedTextMasker.unmask("<LG_P0> and <LG_P1>", placeholders)
+
+        assert result == "literal <LG_P1> and CONTROL"
+
     def test_pre_and_post_process_round_trip_masked_preserved_text(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
