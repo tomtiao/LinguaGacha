@@ -731,6 +731,41 @@ class TestTextProcessor:
 
         assert result == r"造成\C[20]5\C[0]点伤害"
 
+    def test_post_process_keeps_restored_control_code_bracket_after_prefix_restore(
+        self,
+    ) -> None:
+        item = Item(
+            src=(
+                "【\\C[27]項目一\\C[0]】… "
+                "説明文Aは\\C[17]値一\\C[0]を表示し、"
+                "\\C[27]処理一\\C[0]を実行します。\n"
+                "【項目二】… 説明文Bは\\C[17]値二\\C[0]に戻り、"
+                "処理二を再開します。状態が\\C[27]大きく変化\\C[0]します。"
+            ),
+            text_type=Item.TextType.RPGMAKER,
+        )
+        snapshot = create_snapshot(
+            text_preserve_mode=DataManager.TextPreserveMode.SMART,
+        )
+        processor = TextProcessor(Config(), item, snapshot)
+
+        processor.pre_process()
+        _name, result = processor.post_process(
+            [
+                "项目一<LG_P0>…<LG_P1>说明文本A显示<LG_P2>"
+                "值一<LG_P3>，并执行<LG_P4>处理一<LG_P5>。",
+                "【项目二】…<LG_P0>说明文本B回到<LG_P1>值二<LG_P2>，"
+                "并重新开始处理二。状态<LG_P3>大幅变化<LG_P4>。",
+            ]
+        )
+
+        assert result == (
+            "【\\C[27]项目一\\C[0]】… 说明文本A显示"
+            "\\C[17]值一\\C[0]，并执行\\C[27]处理一\\C[0]。\n"
+            "【项目二】… 说明文本B回到\\C[17]值二\\C[0]，"
+            "并重新开始处理二。状态\\C[27]大幅变化\\C[0]。"
+        )
+
     def test_get_rule_returns_none_when_preset_file_missing(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

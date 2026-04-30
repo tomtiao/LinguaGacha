@@ -609,12 +609,6 @@ class TextProcessor(Base):
                 placeholders = self.protected_placeholders_by_line.get(i, ())
                 dst = ProtectedTextMasker.unmask(dst, placeholders)
 
-                # 自动修复
-                dst = self.auto_fix(src, dst)
-
-                # 译后替换
-                dst = self.replace_post_translation(dst)
-
                 prefix_codes = self.prefix_codes.get(i) or []
                 if prefix_codes:
                     dst = "".join(prefix_codes) + dst
@@ -622,6 +616,12 @@ class TextProcessor(Base):
                 suffix_codes = self.suffix_codes.get(i) or []
                 if suffix_codes:
                     dst = dst + "".join(suffix_codes)
+
+                # 自动修复
+                dst = self.auto_fix(src, dst)
+
+                # 译后替换
+                dst = self.replace_post_translation(dst)
 
                 # 在所有处理（fixers、replacements、prefix/suffix codes）完成后，
                 # 再恢复原始的头尾空白，确保空白始终位于最外层，避免被中间处理误修。
