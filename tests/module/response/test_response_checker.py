@@ -331,7 +331,9 @@ class TestResponseCheckerCheckLines:
         )
 
         checks = checker.check_lines(
-            ["<LG_P0>x<LG_P1>"], ["<LG_P0>y<LG_P1>"], Item.TextType.NONE
+            ["<PLACEHOLDER_0>x<PLACEHOLDER_1>"],
+            ["<PLACEHOLDER_0>y<PLACEHOLDER_1>"],
+            Item.TextType.NONE,
         )
 
         assert checks == [ResponseChecker.Error.NONE]

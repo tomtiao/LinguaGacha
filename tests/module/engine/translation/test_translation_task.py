@@ -613,7 +613,7 @@ class TestTranslationTaskApplyResponseData:
     ) -> None:
         task = create_task(skip_response_check=False)
         checker = FakeResponseChecker([ResponseChecker.Error.NONE])
-        processor = FakeProcessor(["<LG_P0>text"], (None, "should-not-apply"))
+        processor = FakeProcessor(["<PLACEHOLDER_0>text"], (None, "should-not-apply"))
         processor.placeholder_results = [False]
         task.response_checker = checker
         task.processors = [processor]
@@ -626,7 +626,7 @@ class TestTranslationTaskApplyResponseData:
         )
 
         result = task.apply_response_data(
-            prepared={"srcs": ["<LG_P0>text"], "console_log": []},
+            prepared={"srcs": ["<PLACEHOLDER_0>text"], "console_log": []},
             request_response=create_request_response(
                 start_time=1.0,
                 input_tokens=5,

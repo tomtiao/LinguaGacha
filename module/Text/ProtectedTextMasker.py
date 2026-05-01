@@ -15,8 +15,11 @@ class ProtectedMaskResult:
 
 
 class ProtectedTextMasker:
-    PLACEHOLDER_TEMPLATE: str = "<LG_P{INDEX}>"
-    PLACEHOLDER_PATTERN: re.Pattern[str] = re.compile(r"<LG_P\d+>")
+    PLACEHOLDER_TEMPLATE: str = "<PLACEHOLDER_{INDEX}>"
+    PLACEHOLDER_PATTERN: re.Pattern[str] = re.compile(r"<PLACEHOLDER_\d+>")
+    PLACEHOLDER_CONTAMINATION_PATTERN: re.Pattern[str] = re.compile(
+        r"<PLACEHOLDER(?:_\d*)?>?|PLACEHOLDER_\d+>?"
+    )
 
     @classmethod
     def mask(cls, text: str, rule: re.Pattern[str] | None) -> ProtectedMaskResult:
@@ -47,12 +50,13 @@ class ProtectedTextMasker:
     def validate(
         cls, text: str, placeholders: tuple[ProtectedPlaceholder, ...]
     ) -> bool:
-        if not placeholders:
-            return True
-
         expected = [placeholder.placeholder for placeholder in placeholders]
         actual = cls.PLACEHOLDER_PATTERN.findall(text)
-        return actual == expected
+        if actual != expected:
+            return False
+
+        remainder = cls.PLACEHOLDER_PATTERN.sub("", text)
+        return cls.PLACEHOLDER_CONTAMINATION_PATTERN.search(remainder) is None
 
     @classmethod
     def unmask(cls, text: str, placeholders: tuple[ProtectedPlaceholder, ...]) -> str:

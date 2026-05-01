@@ -346,7 +346,9 @@ class PromptBuilder(Base):
             return ""
 
         placeholder_samples = sorted(
-            v for v in unique_samples if v.startswith("<LG_P") and v.endswith(">")
+            v
+            for v in unique_samples
+            if v.startswith("<PLACEHOLDER_") and v.endswith(">")
         )
         if placeholder_samples:
             sample_text = ", ".join(placeholder_samples)

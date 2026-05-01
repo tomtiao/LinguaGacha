@@ -666,37 +666,75 @@ class TestTextProcessor:
             re.compile(r"\\C\[\d+\]"),
         )
 
-        assert result.text == "<LG_P0>5<LG_P1>点のダメージを与える"
+        assert result.text == "<PLACEHOLDER_0>5<PLACEHOLDER_1>点のダメージを与える"
         assert result.placeholders == (
-            ProtectedPlaceholder(placeholder="<LG_P0>", text=r"\C[20]"),
-            ProtectedPlaceholder(placeholder="<LG_P1>", text=r"\C[0]"),
+            ProtectedPlaceholder(placeholder="<PLACEHOLDER_0>", text=r"\C[20]"),
+            ProtectedPlaceholder(placeholder="<PLACEHOLDER_1>", text=r"\C[0]"),
         )
         assert (
             ProtectedTextMasker.validate(
-                "造成<LG_P0>5<LG_P1>点伤害", result.placeholders
+                "造成<PLACEHOLDER_0>5<PLACEHOLDER_1>点伤害", result.placeholders
             )
             is True
         )
         assert (
-            ProtectedTextMasker.validate("造成<LG_P0>5点伤害", result.placeholders)
+            ProtectedTextMasker.validate(
+                "造成<PLACEHOLDER_0>5点伤害", result.placeholders
+            )
             is False
         )
         assert (
-            ProtectedTextMasker.unmask("造成<LG_P0>5<LG_P1>点伤害", result.placeholders)
+            ProtectedTextMasker.unmask(
+                "造成<PLACEHOLDER_0>5<PLACEHOLDER_1>点伤害",
+                result.placeholders,
+            )
             == r"造成\C[20]5\C[0]点伤害"
         )
+
+    @pytest.mark.parametrize(
+        ("text", "expected"),
+        [
+            ("<PLACEHOLDER_0>世界", True),
+            ("世界<PLACEHOLDER_0>", True),
+            ("<PLACEHOLDER_0><PLACEHOLDER_0>世界", False),
+            ("PLACEHOLDER_0的世界<PLACEHOLDER_0>", False),
+            ("<PLACEHOLDER_0>世界<PLACEHOLDER_0", False),
+            ("<PLACEHOLDER_0>世界PLACEHOLDER_0", False),
+            ("<PLACEHOLDER_0>世界<PLACEHOLDER>", False),
+            ("<PLACEHOLDER_0>世界<PLACEHOLDER_>", False),
+        ],
+    )
+    def test_protected_text_masker_rejects_placeholder_contamination(
+        self, text: str, expected: bool
+    ) -> None:
+        placeholders = (
+            ProtectedPlaceholder(placeholder="<PLACEHOLDER_0>", text=r"\C[20]"),
+        )
+
+        assert ProtectedTextMasker.validate(text, placeholders) is expected
+
+    def test_protected_text_masker_rejects_unexpected_placeholder_contamination(
+        self,
+    ) -> None:
+        assert ProtectedTextMasker.validate("翻译内容<PLACEHOLDER_0>", ()) is False
+        assert ProtectedTextMasker.validate("翻译内容<PLACEHOLDER>", ()) is False
+        assert ProtectedTextMasker.validate("翻译内容", ()) is True
 
     def test_protected_text_masker_unmasks_without_cascading_replacements(
         self,
     ) -> None:
         placeholders = (
-            ProtectedPlaceholder(placeholder="<LG_P0>", text="literal <LG_P1>"),
-            ProtectedPlaceholder(placeholder="<LG_P1>", text="CONTROL"),
+            ProtectedPlaceholder(
+                placeholder="<PLACEHOLDER_0>", text="literal <PLACEHOLDER_1>"
+            ),
+            ProtectedPlaceholder(placeholder="<PLACEHOLDER_1>", text="CONTROL"),
         )
 
-        result = ProtectedTextMasker.unmask("<LG_P0> and <LG_P1>", placeholders)
+        result = ProtectedTextMasker.unmask(
+            "<PLACEHOLDER_0> and <PLACEHOLDER_1>", placeholders
+        )
 
-        assert result == "literal <LG_P1> and CONTROL"
+        assert result == "literal <PLACEHOLDER_1> and CONTROL"
 
     def test_pre_and_post_process_round_trip_masked_preserved_text(
         self, monkeypatch: pytest.MonkeyPatch
@@ -722,15 +760,17 @@ class TestTextProcessor:
 
         processor.pre_process()
 
-        assert processor.srcs == ["<LG_P0>5<LG_P1>点のダメージを与える"]
+        assert processor.srcs == ["<PLACEHOLDER_0>5<PLACEHOLDER_1>点のダメージを与える"]
         assert processor.validate_protected_placeholders(
-            ["造成<LG_P0>5<LG_P1>点伤害"]
+            ["造成<PLACEHOLDER_0>5<PLACEHOLDER_1>点伤害"]
         ) == [True]
-        assert processor.validate_protected_placeholders(["造成<LG_P0>5点伤害"]) == [
-            False
-        ]
+        assert processor.validate_protected_placeholders(
+            ["造成<PLACEHOLDER_0>5点伤害"]
+        ) == [False]
 
-        _, result = processor.post_process(["造成<LG_P0>5<LG_P1>点伤害"])
+        _, result = processor.post_process(
+            ["造成<PLACEHOLDER_0>5<PLACEHOLDER_1>点伤害"]
+        )
 
         assert result == r"造成\C[20]5\C[0]点伤害"
 
@@ -774,9 +814,11 @@ class TestTextProcessor:
         monkeypatch.setattr(processor, "replace_post_translation", lambda dst: dst)
 
         processor.pre_process()
-        _, result = processor.post_process(["造成<LG_P0>5<LG_P1>点伤害"])
+        _, result = processor.post_process(
+            ["造成<PLACEHOLDER_0>5<PLACEHOLDER_1>点伤害"]
+        )
 
-        assert result == "造成<LG_P0>5<LG_P1>点伤害"
+        assert result == "造成<PLACEHOLDER_0>5<PLACEHOLDER_1>点伤害"
 
     def test_post_process_keeps_restored_control_code_bracket_after_prefix_restore(
         self,
@@ -801,10 +843,12 @@ class TestTextProcessor:
         processor.pre_process()
         _name, result = processor.post_process(
             [
-                "项目一<LG_P0>…<LG_P1>说明文本A显示<LG_P2>"
-                "值一<LG_P3>，并执行<LG_P4>处理一<LG_P5>。",
-                "【项目二】…<LG_P0>说明文本B回到<LG_P1>值二<LG_P2>，"
-                "并重新开始处理二。状态<LG_P3>大幅变化<LG_P4>。",
+                "项目一<PLACEHOLDER_0>…<PLACEHOLDER_1>说明文本A显示"
+                "<PLACEHOLDER_2>值一<PLACEHOLDER_3>，并执行"
+                "<PLACEHOLDER_4>处理一<PLACEHOLDER_5>。",
+                "【项目二】…<PLACEHOLDER_0>说明文本B回到"
+                "<PLACEHOLDER_1>值二<PLACEHOLDER_2>，"
+                "并重新开始处理二。状态<PLACEHOLDER_3>大幅变化<PLACEHOLDER_4>。",
             ]
         )
 
@@ -1295,9 +1339,9 @@ class TestTextProcessor:
 
         processor.pre_process()
 
-        assert processor.srcs == ["<LG_P0>"]
+        assert processor.srcs == ["<PLACEHOLDER_0>"]
         assert processor.vaild_index == {1}
-        assert processor.samples == ["<LG_P0>"]
+        assert processor.samples == ["<PLACEHOLDER_0>"]
 
     def test_pre_process_skips_fully_preserved_line_when_auto_process_disabled(
         self, monkeypatch: pytest.MonkeyPatch
@@ -1349,7 +1393,7 @@ class TestTextProcessor:
 
         processor.pre_process()
 
-        assert processor.srcs == ["<LG_P0>hello<LG_P1>"]
+        assert processor.srcs == ["<PLACEHOLDER_0>hello<PLACEHOLDER_1>"]
         assert processor.vaild_index == {0}
         assert processor.prefix_codes == {}
         assert processor.suffix_codes == {}

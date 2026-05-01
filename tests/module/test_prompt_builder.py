@@ -257,10 +257,12 @@ class TestPromptBuilder:
             quality_snapshot=cast(Any, FakeQualitySnapshot()),
         )
 
-        result = builder.build_control_characters_samples("普通内容", ["<LG_P0>"])
+        result = builder.build_control_characters_samples(
+            "普通内容", ["<PLACEHOLDER_0>"]
+        )
 
         assert result.startswith("保护占位符示例：\n")
-        assert "<LG_P0>" in result
+        assert "<PLACEHOLDER_0>" in result
         assert "不要翻译、删除、复制或修改" in result
 
     def test_build_inputs_returns_jsonline_block(self) -> None:
