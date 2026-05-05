@@ -82,17 +82,20 @@
 - See [Wiki - Supported Formats](https://github.com/neavo/LinguaGacha/wiki/%E6%94%AF%E6%8C%81%E7%9A%84%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F) for examples. Submit format requests via [ISSUES](https://github.com/neavo/LinguaGacha/issues)
 
 ## Recent Updates 📅
-- 2026430 v0.99.3
+- 20260505 v0.99.4
+  - Optimizations and Improvements #545 #546 #549 #550 #551 #552
+
+- 20260430 v0.99.3
   - Optimizations and Improvements #535 #536 #539 #541
 
-- 2026428 v0.99.2
+- 20260428 v0.99.2
   - Optimizations and Improvements #531 #533
 
-- 2026428 v0.99.1
+- 20260428 v0.99.1
   - Optimizations and Improvements #513 #522
   - Try to fix startup errors on the macOS version
 
-- 2026427 v0.99.0
+- 20260427 v0.99.0
   - Completely redesigned the user interface, faster, higher, stronger
   - Temporarily removed `CLI` mode
 
